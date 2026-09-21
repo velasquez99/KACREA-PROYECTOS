@@ -299,6 +299,32 @@ body.dopen{overflow:hidden}
 .bitf{flex-direction:column;align-items:flex-start}.bitf .ta{border-color:var(--line);background:var(--bg)}
 .bit{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.bit li{border-left:2px solid var(--line);padding-left:10px}.bit small{font:500 11px var(--mono);color:var(--muted)}.bit p{margin:2px 0 0;font-size:13px;white-space:pre-wrap}
 .pj{grid-template-columns:34px 1fr auto!important}
+/* shell / panel */
+#appSys iframe{display:block;width:100%;height:calc(100vh - 70px);height:calc(100dvh - 70px);border:0;border-radius:12px;background:var(--bg)}
+.p-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:6px 0 14px}
+.p-sec{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.p-st{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.p-st h2{font:700 20px var(--display);margin:0}.p-st small{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.p-link{margin-left:auto;color:var(--accent);text-decoration:none;font-weight:500}
+.p-tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.p-tiles.t4{grid-template-columns:repeat(4,minmax(0,1fr));border-radius:10px}
+@media (max-width:1100px){.p-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (max-width:560px){.p-tiles,.p-tiles.t4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pt{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pt span{font:500 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pt b{font:700 22px/1.15 var(--display);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.pt small{font-size:11.5px;color:var(--muted)}
+.p-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.p-grid .wide{grid-column:1/-1}@media (max-width:900px){.p-grid{grid-template-columns:1fr}}
+.p-grid .panel{display:flex;flex-direction:column;gap:10px}.p-grid .panel h2{margin:0}
+.pv-cols{display:flex;gap:6px;height:180px;align-items:stretch}
+.pv-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.pv-v{font:500 10.5px var(--mono);color:var(--muted);height:14px;white-space:nowrap}.pv-b{flex:1;width:100%;max-width:38px;display:flex;align-items:flex-end;background:linear-gradient(var(--line-2),var(--line-2)) bottom/100% 1px no-repeat}
+.pv-b b{display:block;width:100%;background:color-mix(in srgb,var(--accent) 55%,var(--surface));border-radius:4px 4px 0 0}.pv-col.cur .pv-b b{background:var(--accent)}.pv-col.cur .pv-v{color:var(--ink);font-weight:600}
+.pv-l{font:500 10.5px var(--mono);color:var(--muted)}
+.p-list{display:flex;flex-direction:column}
+.p-row{display:grid;grid-template-columns:90px minmax(0,1fr) 110px;gap:10px;align-items:center;padding:8px 0;border:0;border-top:1px solid var(--line-2);background:none;text-align:left;cursor:pointer;width:100%}
+.p-row:first-child{border-top:0}.p-row:hover b{color:var(--accent)}
+.p-d{font:500 12px var(--mono);color:var(--muted)}.p-n{display:flex;flex-direction:column;min-width:0}.p-n b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.p-n small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-pr{display:flex;align-items:center;gap:6px}.p-pr small{font:500 11px var(--mono);color:var(--muted)}
+.p-h3{font:600 13px var(--display);margin:6px 0 0;color:var(--warn)}.p-chips{display:flex;flex-wrap:wrap;gap:6px}
+.p-chip{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:4px 10px;font-size:12px;cursor:pointer}.p-chip:hover{border-color:var(--accent);color:var(--accent)}
 .banner{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:13px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;z-index:20;box-shadow:var(--shadow)}
 </style>
@@ -326,11 +352,15 @@ body{margin:0}img{max-width:100%}[hidden]{display:none!important}
 <div class="wrap">
   <nav class="modnav" aria-label="Módulos">
     <span class="brand">Sistema Kacrea</span>
-    <a href="sistema.html#comercial">Comercial</a>
-    <a href="sistema.html#administrativo">Administrativo</a>
-    <a href="sistema.html#operativo">Operativo</a>
-    <a href="index.html" aria-current="page">Eventos · Agenda</a>
+    <a href="#panel" data-mod="panel">Panel</a>
+    <a href="#eventos" data-mod="eventos">Agenda y proyectos</a>
+    <a href="#comercial" data-mod="comercial">Comercial</a>
+    <a href="#administrativo" data-mod="administrativo">Administrativo</a>
+    <a href="#operativo" data-mod="operativo">Operativo</a>
   </nav>
+  <section id="appPanel"><div id="panel"></div></section>
+  <div id="appSys" hidden></div>
+  <div id="appEventos" hidden>
   <header class="top">
     <div>
       <div class="eyebrow">Kacrea · Producción de eventos</div>
@@ -404,6 +434,7 @@ body{margin:0}img{max-width:100%}[hidden]{display:none!important}
   <section id="viewInd" hidden><div class="ind" id="ind"></div></section>
   <section id="viewEq" hidden><div id="eq"></div></section>
   <section id="viewProv" hidden><div class="prov" id="prov"></div></section>
+  </div>
 </div>
 <div id="dls"></div>
 <div class="toast" id="toast" hidden></div>
@@ -772,7 +803,7 @@ function renderInd(){
   h+=panel("Calendario de picos","eventos por semana · próximas 12 semanas",`<div class="cols">${cal.map(x=>`<div class="col" title="${esc(x.l.map(p=>p.proyecto).join(" · "))||"Sin eventos"}"><span class="cv">${x.l.length||""}</span><span class="cb"><b style="height:${x.l.length?Math.max(6,x.l.length/cm*100):0}%;${x.l.length>=Math.max(3,cm*.75)?"background:var(--bad)":""}"></b></span><span class="cl">${x.w.lab}</span></div>`).join("")}</div>
     <p class="note">En rojo, las semanas pico. ${act.filter(p=>!p.fechaInicio).length?`${act.filter(p=>!p.fechaInicio).length} proyecto(s) sin fecha no aparecen.`:""}</p>`);
 
-  h+=panel("Comercial y administrativo","",`<p class="note" style="font-size:13px">Ventas, embudo, clientes, cobranza, punto de equilibrio y tiempos comerciales se calculan con la <b>hoja maestra</b> en el Sistema Kacrea.</p><div class="modlinks"><a class="btn sm" href="sistema.html#comercial">Abrir Comercial</a><a class="btn sm" href="sistema.html#administrativo">Abrir Administrativo</a><a class="btn sm" href="sistema.html#operativo">Operativo · todos los departamentos</a></div>`);
+  h+=panel("Comercial y administrativo","",`<p class="note" style="font-size:13px">Ventas, embudo, clientes, cobranza, punto de equilibrio y tiempos comerciales se calculan con la <b>hoja maestra</b> en el Sistema Kacrea.</p><div class="modlinks"><a class="btn sm" href="#comercial">Abrir Comercial</a><a class="btn sm" href="#administrativo">Abrir Administrativo</a><a class="btn sm" href="#operativo">Operativo · todos los departamentos</a></div>`);
   $("#ind").innerHTML=h;
 }
 
@@ -780,7 +811,7 @@ function renderColPanel(){
   $("#cList").innerHTML=S.custom.length?S.custom.map(c=>`<span class="cchip">${esc(c.label)} <span>${{step:"estatus",yn:"sí/no",text:"texto",date:"fecha",money:"monto"}[c.type]} · ${c.group==="op"?"operativo":"admin."}</span><button data-cdel="${esc(c.id)}">Quitar</button></span>`).join(""):`<span class="empty">Aún no hay columnas personalizadas.</span>`;
 }
 function renderShStatus(){const b=$("#shBtn");if(!b)return;b.className="sync "+(SH.err?"error":SH.loaded?"ok":"saving");b.querySelector("span").textContent=SH.err?"Hoja maestra: sin conexión":SH.loaded?`Hoja maestra · ${SH.byId.size} proyectos`:"Leyendo hoja maestra…";}
-function renderAll(){renderShStatus();renderFilters();renderSummary();if(S.view==="tabla"){if(inGrid()){S.pending=true;[...S.projects.keys()].forEach(patchRow);}else renderTable();}else if(S.view==="agenda")renderAgenda();else if(S.view==="eq")renderEq();else if(S.view==="ind")renderInd();else renderProv();renderColPanel();if(D.id){if(inDrawer())D.pending=true;else renderDrawer();}}
+function renderAll(){if(SYS.mod==="panel"){renderPanel();}renderShStatus();renderFilters();renderSummary();if(S.view==="tabla"){if(inGrid()){S.pending=true;[...S.projects.keys()].forEach(patchRow);}else renderTable();}else if(S.view==="agenda")renderAgenda();else if(S.view==="eq")renderEq();else if(S.view==="ind")renderInd();else renderProv();renderColPanel();if(D.id){if(inDrawer())D.pending=true;else renderDrawer();}}
 
 /* ---------- Gestión diaria: entregables, agenda y ficha de proyecto ---------- */
 const FASES=["Planificación","Conceptualización","Pre-producción","Producción","Montaje / Ejecución","Cierre"];
@@ -921,6 +952,81 @@ function initDrawer(){
   });
 }
 
+/* ---------- Shell del sistema: Panel · Eventos · módulos de la hoja maestra ---------- */
+const SYS={frame:null,ready:false,mod:"panel"};
+const MODS=["panel","eventos","comercial","administrativo","operativo"];
+function sysWin(){try{return SYS.frame&&SYS.frame.contentWindow;}catch(e){return null;}}
+function sysEval(x){try{return sysWin().eval(x);}catch(e){return undefined;}}
+function initSys(){
+  const f=document.createElement("iframe");f.id="sysFrame";f.title="Módulos Comercial, Administrativo y Operativo";
+  f.src="sistema.html?embed=1#comercial";$("#appSys").appendChild(f);SYS.frame=f;
+  const poll=setInterval(()=>{const n=sysEval("RAW.length");if(n>0){const v=sysWin().document.querySelector("#kpi-grid .kpi-val");if(v&&v.textContent.trim()){SYS.ready=true;clearInterval(poll);if(SYS.mod==="panel")renderPanel();}}},700);
+  setTimeout(()=>clearInterval(poll),120000);
+}
+function route(){
+  let m=(location.hash||"").slice(1);if(!MODS.includes(m))m="panel";SYS.mod=m;
+  document.querySelectorAll(".modnav a[data-mod]").forEach(a=>a.setAttribute("aria-current",a.dataset.mod===m?"page":"false"));
+  $("#appPanel").hidden=m!=="panel";$("#appEventos").hidden=m!=="eventos";$("#appSys").hidden=!["comercial","administrativo","operativo"].includes(m);
+  if(!$("#appSys").hidden){const w=sysWin();try{if(w&&w.location.hash!=="#"+m)w.location.hash=m;}catch(e){}}
+  if(m==="panel")renderPanel();
+  if(m==="eventos")renderAll();
+  window.scrollTo(0,0);
+}
+function kpiFromSys(){const out={};const w=sysWin();if(!w)return out;
+  w.document.querySelectorAll("#kpi-grid .kpi").forEach(k=>{const l=(k.querySelector(".kpi-lbl")||{}).textContent||"";out[l.trim()]={v:((k.querySelector(".kpi-val")||{}).textContent||"").trim(),s:((k.querySelector(".kpi-sub")||{}).textContent||"").trim()};});return out;}
+function bizData(){
+  const R=sysEval("RAW")||[];const Y=new Date().getFullYear();
+  const paus=new Set(R.filter(r=>r.est_ppto==="Pausado").map(r=>(r.id||"").trim()).filter(Boolean));
+  const apr=R.filter(r=>r.est_ppto==="Aprobado"&&!paus.has((r.id||"").trim()));
+  const val=r=>(r.monto_ppto||0)+(r.dif_camb||0);
+  const mes=Array.from({length:12},()=>0),cob=Array.from({length:12},()=>0);
+  for(const r of apr){const d=r.fecha_ar;if(d&&d.getFullYear&&d.getFullYear()===Y)mes[d.getMonth()]+=val(r);}
+  for(const r of R){const d=r.fecha_cob;if(d&&d.getFullYear&&d.getFullYear()===Y)cob[d.getMonth()]+=(r.monto_cob||0);}
+  const dep={};for(const r of apr){const k=r.depto||"Sin depto";dep[k]=(dep[k]||0)+val(r);}
+  const cli={};for(const r of apr){const k=(r.cliente||"Sin cliente").trim();cli[k]=(cli[k]||0)+(r.monto_ppto||0);}
+  const tot=Object.values(cli).reduce((s,x)=>s+x,0);
+  const PIPE=["Por Elaboración","En Revisión Interna","Enviado - Pendiente A. C.","Proceso de Licitación"];
+  const pipe=PIPE.map(e=>{const l=R.filter(r=>r.est_ppto===e);return {e,n:new Set(l.map(r=>r.id)).size,m:l.reduce((s,r)=>s+(r.monto_ppto||0),0)};});
+  return {n:R.length,mes,cob,dep:Object.entries(dep).sort((a,b)=>b[1]-a[1]),cli:Object.entries(cli).sort((a,b)=>b[1]-a[1]).slice(0,5),tot,pipe,Y};
+}
+function vbars(vals,labels,cur){const mx=Math.max(1,...vals);
+  return `<div class="pv-cols">${vals.map((v,i)=>`<div class="pv-col${i===cur?" cur":""}" title="${labels[i]}: ${money(v)}"><span class="pv-v">${v?(v>=1000?"$"+Math.round(v/1000)+"k":money(v)):""}</span><span class="pv-b"><b style="height:${v?Math.max(3,v/mx*100):0}%"></b></span><span class="pv-l">${labels[i]}</span></div>`).join("")}</div>`;}
+function renderPanel(){
+  const el=$("#panel");if(!el)return;
+  const K=kpiFromSys();const B=SYS.ready?bizData():null;
+  const list=filtered(true);const act=list.filter(p=>!isPast(p));
+  const AI=agendaItems(list);const wEnd=isoOf(new Date(monday(TODAY).getTime()+6*DAY));
+  const venc=AI.filter(x=>x.d&&x.d<TODAY&&(x.k==="ent"||x.k==="reu"));const hoy=AI.filter(x=>x.d===TODAY);const sem=AI.filter(x=>x.d&&x.d>=TODAY&&x.d<=wEnd);
+  const noNext=act.filter(p=>!hasNextStep(p));
+  const prox=sorted(act.filter(p=>{const d=daysTo(p.fechaInicio);return d!==null&&d<=30;}));
+  const crit=[];for(const p of act)for(const a of alertsOf(p))if(a.s===3)crit.push({p,a});
+  const tile=(l,v,s,cls="")=>`<div class="pt"><span>${l}</span><b class="${cls}">${v}</b><small>${s||""}</small></div>`;
+  const kv=(n)=>K[n]||{v:"…",s:""};
+  const ML=MES3.map(m=>m.charAt(0).toUpperCase()+m.slice(1));const curM=new Date().getMonth();
+  let h=`<div class="p-head"><div><div class="eyebrow">Kacrea · ${new Date().getDate()} ${MES3[new Date().getMonth()]} ${new Date().getFullYear()}</div><h1>Panel <em>general</em></h1></div>
+    <button class="btn" id="pRefresh">Actualizar datos</button></div>`;
+  // Negocio
+  h+=`<section class="p-sec"><div class="p-st"><h2>Negocio</h2><small>hoja maestra · ${B?B.n+" registros":"cargando…"}</small><a class="p-link" href="#comercial">Ver Comercial →</a></div>
+  <div class="p-tiles">${tile("Ventas aprobadas",kv("Ventas - Facturado").v,kv("Ventas - Facturado").s)}${tile("Cobrado",kv("Cobrado").v,kv("Cobrado").s)}${tile("Por cobrar",kv("Por Cobrar").v,kv("Por Cobrar").s,"twarn")}${tile("Pend. aprobación",kv("Proyectos Pend. Aprob.").v,kv("Proyectos Pend. Aprob.").s)}${tile("En cotización",kv("En Cotización").v,kv("En Cotización").s)}${tile("Tasa de cierre",kv("Tasa de Cierre").v,kv("Tasa de Cierre").s)}</div>
+  ${B?`<div class="p-grid">
+    <div class="panel"><h2>Ventas aprobadas por mes <small>${B.Y}</small></h2>${vbars(B.mes.slice(0,curM+1),ML.slice(0,curM+1),curM)}<p class="note">Monto PPTO + diferencial cambiario de los presupuestos aprobados, por fecha de aprobación.</p></div>
+    <div class="panel"><h2>Cobrado por mes <small>${B.Y}</small></h2>${vbars(B.cob.slice(0,curM+1),ML.slice(0,curM+1),curM)}<p class="note">Monto cobrado según fecha de cobro.</p></div>
+    <div class="panel"><h2>Ventas por departamento</h2><div class="fun">${B.dep.map(([d,v])=>`<div class="fr"><span class="fl">${esc(d)}</span>${hbar(v,B.dep[0][1])}<span class="fv">${money(v)}</span></div>`).join("")}</div></div>
+    <div class="panel"><h2>Top 5 clientes <small>% de lo aprobado</small></h2><div class="fun">${B.cli.map(([c,v])=>`<div class="fr"><span class="fl">${esc(c)}</span>${hbar(v,B.cli[0][1])}<span class="fv">${Math.round(v/B.tot*100)}% <small>${money(v)}</small></span></div>`).join("")}</div>${B.cli[0]&&B.cli[0][1]/B.tot>=.3?`<div class="flag s2" style="margin-top:8px">Dependencia alta: ${esc(B.cli[0][0])} concentra el ${Math.round(B.cli[0][1]/B.tot*100)}%.</div>`:""}</div>
+    <div class="panel wide"><h2>Oportunidades en curso <small>presupuestos aún no aprobados</small></h2><div class="p-tiles t4">${B.pipe.map(x=>tile(x.e.replace(" - Pendiente A. C."," al cliente"),money(x.m),x.n+" proyectos")).join("")}</div></div>
+  </div>`:`<div class="state">Leyendo la hoja maestra…</div>`}</section>`;
+  // Operación
+  h+=`<section class="p-sec"><div class="p-st"><h2>Operación</h2><small>eventos y proyectos por venir</small><a class="p-link" href="#eventos">Ir a la Agenda →</a></div>
+  <div class="p-tiles">${tile("Vencidos",venc.length,"entregables y reuniones atrasados",venc.length?"tbad":"")}${tile("Hoy",hoy.length,"reuniones, entregables y eventos")}${tile("Esta semana",sem.length,"en agenda")}${tile("Sin próxima acción",noNext.length,"proyectos sin reunión ni entregable",noNext.length?"twarn":"")}${tile("Eventos 30 días",prox.length,"próximos a ejecutar")}${tile("Alertas críticas",crit.length,"requieren acción ya",crit.length?"tbad":"")}</div>
+  <div class="p-grid">
+    <div class="panel"><h2>Próximos eventos <small>30 días</small></h2>${prox.length?`<div class="p-list">${prox.map(p=>{const pr=progress(p);const ne=nextEnt(p);return `<button class="p-row" data-open="${esc(p.id)}"><span class="p-d">${esc(rangeLabel(p))}</span><span class="p-n"><b>${esc(p.proyecto||"")}</b><small>${esc(p.fase||"Sin fase")}${ne?" · próximo: "+esc(ne.t):""}</small></span><span class="p-pr"><span class="hb"><b style="width:${pr.pct}%;${pr.pct===100?"background:var(--ok)":""}"></b></span><small>${pr.done}/8</small></span></button>`;}).join("")}</div>`:`<div class="empty">Sin eventos en los próximos 30 días.</div>`}</div>
+    <div class="panel"><h2>Requiere acción ya <small>alertas críticas</small></h2>${crit.length?`<div class="list">${crit.slice(0,10).map(({p,a})=>`<button class="li" data-open="${esc(p.id)}"><span class="sev s3"></span><span><div class="n">${esc(p.proyecto)}</div><div class="d">${esc(a.t)}</div></span><span class="when">${esc(rangeLabel(p))}</span></button>`).join("")}</div>`:`<div class="empty">Nada crítico.</div>`}
+      ${noNext.length?`<h3 class="p-h3">Sin próxima acción</h3><div class="p-chips">${noNext.slice(0,12).map(p=>`<button class="p-chip" data-open="${esc(p.id)}">${esc(p.proyecto)}</button>`).join("")}</div>`:""}</div>
+  </div></section>`;
+  el.innerHTML=h;
+  const rb=$("#pRefresh");if(rb)rb.onclick=()=>{SYS.ready=false;try{sysWin().loadData();}catch(e){}loadSheet();renderPanel();const t=setInterval(()=>{const v=sysWin()&&sysWin().document.querySelector("#kpi-grid .kpi-val");if(v&&v.textContent.trim()&&sysEval("RAW.length")>0){SYS.ready=true;clearInterval(t);renderPanel();toast("Datos actualizados");}},800);setTimeout(()=>clearInterval(t),60000);};
+}
+
 /* ---------- permisos ---------- */
 function setReadOnly(msg){
   if(S.ro)return;S.ro=true;document.body.classList.add("ro");
@@ -1032,7 +1138,7 @@ $("#cList").addEventListener("click",e=>{
 /* ---------- boot ---------- */
 const hoy=new Date();$("#today").textContent="Hoy · "+hoy.getDate()+" "+MES3[hoy.getMonth()]+" "+hoy.getFullYear();
 renderAll();
-initDrawer();setView("agenda");
+initDrawer();setView("agenda");initSys();window.addEventListener("hashchange",route);route();
 loadSheet();setInterval(loadSheet,5*60*1000);
 let ren=0;function schedule(){cancelAnimationFrame(ren);ren=requestAnimationFrame(renderAll);}
 (async()=>{

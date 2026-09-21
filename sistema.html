@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Sistema Kacrea</title>
+<script>
+/* Este módulo vive dentro del Sistema Kacrea (index.html). Abierto solo, redirige al sistema. */
+(function(){var emb=/[?&]embed=1/.test(location.search);
+  if(!emb){location.replace("index.html"+(location.hash||"#comercial"));return;}
+  document.documentElement.classList.add("embed");})();
+</script>
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
@@ -470,11 +477,17 @@ body[data-mod="operacion"] #kpi-grid{display:none}
 .sk-nav .sk-ev{margin-left:auto;color:var(--purple,#6d5dfc);border:1px solid currentColor}
 @media(max-width:600px){.sk-nav{padding:8px 12px}.sk-brand{display:none}.sk-nav .sk-ev{margin-left:0}}
 .main>.tabs{display:none}
+
+/* --- modo integrado en el Sistema Kacrea --- */
+html.embed .sk-nav,html.embed .hdr{display:none}
+html.embed{--bg:#F1F2EE;--surface:#fff;--surface2:#F7F8F4;--surface3:#E9EBE5;--text:#15171C;--muted:#5D626C;--faint:#8A8F99;--purple:#2D46D6;--purple-dim:rgba(45,70,214,.1);--border:#E9EBE5;--border-md:#DCDFD6}
+html.embed body{background:var(--bg)}
+html.embed .filters{border-radius:12px;border:1px solid var(--border-md);margin:0 24px}
 </style>
 <script src="config.js"></script>
 <script>
 /* Puerta de PIN compartida con el tablero de eventos (mismo PIN, se pide una sola vez por dispositivo) */
-(function(){var pin=String((window.KC_CONFIG||{}).pin||"").trim();if(!pin)return;var key="kc_gate_"+pin;
+(function(){if(document.documentElement.classList.contains("embed"))return;var pin=String((window.KC_CONFIG||{}).pin||"").trim();if(!pin)return;var key="kc_gate_"+pin;
   try{if(localStorage.getItem(key)==="1")return;}catch(e){}
   document.addEventListener("DOMContentLoaded",function(){
     var ov=document.createElement("div");ov.className="gate";
