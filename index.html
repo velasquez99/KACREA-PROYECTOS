@@ -426,8 +426,8 @@ function pFecha(v){const m=String(v||"").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\
 async function loadSheet(){
   if(typeof Papa==="undefined"){SH.err="sin lector";return;}
   let txt=null;
-  for(const u of [SHEET_APPS,SHEET_CSV,"https://corsproxy.io/?"+encodeURIComponent(SHEET_CSV)]){
-    try{const r=await fetch(u);if(!r.ok)throw 0;const t=await r.text();if(t&&t.length>10&&!(t.trim().startsWith("<")&&!t.includes(","))){txt=t;break;}}catch(e){}
+  for(const u of [SHEET_CSV,SHEET_APPS,"https://corsproxy.io/?"+encodeURIComponent(SHEET_CSV)]){
+    try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),15000);const r=await fetch(u,{signal:ctl.signal,cache:"no-store"});clearTimeout(tm);if(!r.ok)throw 0;const t=await r.text();if(t&&t.length>10&&!(t.trim().startsWith("<")&&!t.includes(","))){txt=t;break;}}catch(e){}
   }
   if(!txt){SH.err="No se pudo leer la hoja maestra";schedule();return;}
   const rows=Papa.parse(txt,{header:true,skipEmptyLines:true}).data;const g=new Map();
