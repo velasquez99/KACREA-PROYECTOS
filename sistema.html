@@ -1,0 +1,2831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sistema Kacrea</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8FAFC;--surface:#fff;--surface2:#F1F5F9;--surface3:#E2E8F0;
+  --border:rgba(148,163,184,0.2);--border-md:rgba(148,163,184,0.35);
+  --text:#1E293B;--muted:#64748B;--faint:#94A3B8;
+  --blue:#0284C7;--blue-dim:rgba(2,132,199,0.1);
+  --teal:#0D9488;--teal-dim:rgba(13,148,136,0.1);
+  --green:#16A34A;--green-dim:rgba(22,163,74,0.1);
+  --amber:#D97706;--amber-dim:rgba(217,119,6,0.1);
+  --red:#DC2626;--red-dim:rgba(220,38,38,0.1);
+  --purple:#7C3AED;--purple-dim:rgba(124,58,237,0.1);
+  --r:12px;--r-sm:8px;
+  --sh:0 1px 3px rgba(15,23,42,0.06),0 4px 16px rgba(15,23,42,0.04);
+  --sh-md:0 4px 24px rgba(15,23,42,0.08);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;-webkit-overflow-scrolling:touch;overflow-x:hidden}
+*{box-sizing:border-box}
+
+/* HEADER */
+.hdr{background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 1px 0 var(--border),0 2px 8px rgba(15,23,42,0.04)}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-logo{width:36px;height:36px;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;font-size:20px;line-height:1}
+.hdr-logo svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2}
+.hdr-name{font-size:15px;font-weight:600;letter-spacing:-.3px}
+.hdr-tag{font-size:11px;color:var(--faint);font-family:'DM Mono',monospace}
+.hdr-r{display:flex;align-items:center;gap:8px}
+.upd{font-size:11px;font-family:'DM Mono',monospace;color:var(--faint)}
+.btn-ref{display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;border:none;border-radius:var(--r-sm);padding:8px 14px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(124,58,237,0.3)}
+.btn-ref:hover{opacity:.85}
+.btn-ref svg{stroke:#fff;fill:none;stroke-width:2.5;width:13px;height:13px}
+.btn-ref.spin svg{animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ALERT */
+.alert{background:var(--red-dim);border:1px solid rgba(220,38,38,0.2);border-radius:var(--r);padding:10px 16px;font-size:13px;color:var(--red);margin:12px 24px 0;display:none;align-items:center;gap:8px}
+.alert.on{display:flex}
+
+/* FILTERS */
+.filters{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.f-group{display:flex;align-items:center;gap:6px}
+.f-label{font-size:10px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+select{background:var(--surface);border:1px solid var(--border-md);border-radius:var(--r-sm);padding:5px 26px 5px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .2s}
+select:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-dim)}
+.f-sep{width:1px;height:20px;background:var(--border-md)}
+.f-info{font-size:11px;font-family:'DM Mono',monospace;color:var(--faint);margin-left:auto}
+.btn-clear-f{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border-md);border-radius:var(--r-sm);padding:4px 10px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-clear-f:hover{background:var(--surface2);color:var(--text)}
+select:disabled{opacity:0.4;cursor:not-allowed}
+
+/* MAIN */
+.main{padding:20px 24px 48px;max-width:1600px;margin:0 auto;overflow-x:hidden}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:10px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 16px 14px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kpi.c-teal::before{background:linear-gradient(90deg,var(--teal),#34D399)}
+.kpi.c-blue::before{background:linear-gradient(90deg,var(--blue),#38BDF8)}
+.kpi.c-green::before{background:linear-gradient(90deg,var(--green),#4ADE80)}
+.kpi.c-amber::before{background:linear-gradient(90deg,var(--amber),#FCD34D)}
+.kpi.c-red::before{background:linear-gradient(90deg,var(--red),#F87171)}
+.kpi.c-purple::before{background:linear-gradient(90deg,var(--purple),#A78BFA)}
+.kpi.c-slate::before{background:linear-gradient(90deg,#475569,#94A3B8)}
+.kpi-ico{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.kpi-ico svg{width:14px;height:14px;fill:none;stroke-width:2}
+.kpi.c-teal .kpi-ico{background:var(--teal-dim)} .kpi.c-teal .kpi-ico svg{stroke:var(--teal)}
+.kpi.c-blue .kpi-ico{background:var(--blue-dim)} .kpi.c-blue .kpi-ico svg{stroke:var(--blue)}
+.kpi.c-green .kpi-ico{background:var(--green-dim)} .kpi.c-green .kpi-ico svg{stroke:var(--green)}
+.kpi.c-amber .kpi-ico{background:var(--amber-dim)} .kpi.c-amber .kpi-ico svg{stroke:var(--amber)}
+.kpi.c-red .kpi-ico{background:var(--red-dim)} .kpi.c-red .kpi-ico svg{stroke:var(--red)}
+.kpi.c-purple .kpi-ico{background:var(--purple-dim)} .kpi.c-purple .kpi-ico svg{stroke:var(--purple)}
+.kpi.c-slate .kpi-ico{background:var(--surface2)} .kpi.c-slate .kpi-ico svg{stroke:var(--muted)}
+.kpi-lbl{font-size:8px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;padding-right:32px;min-height:22px;overflow-wrap:anywhere}
+.kpi-val{font-size:20px;font-weight:700;letter-spacing:-.5px;font-family:'DM Mono',monospace;margin-bottom:4px;padding-right:36px}
+.kpi.c-teal .kpi-val{color:var(--teal)}
+.kpi.c-blue .kpi-val{color:var(--blue)}
+.kpi.c-green .kpi-val{color:var(--green)}
+.kpi.c-amber .kpi-val{color:var(--amber)}
+.kpi.c-red .kpi-val{color:var(--red)}
+.kpi.c-purple .kpi-val{color:var(--purple)}
+.kpi.c-slate .kpi-val{color:var(--text)}
+.kpi-sub{font-size:10px;color:var(--faint)}
+.kpi-sub b{color:var(--muted);font-weight:600}
+.var-up{color:var(--green);font-size:10px;font-weight:600}
+.var-dn{color:var(--red);font-size:10px;font-weight:600}
+.var-eq{color:var(--faint);font-size:10px}
+
+/* SECTION GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3-2{display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:14px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.full{margin-bottom:14px}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);width:100%;overflow:hidden}
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px}
+.card-title{font-size:13px;font-weight:600;color:var(--text)}
+.card-sub{font-size:11px;color:var(--faint);margin-top:2px}
+.card-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;white-space:nowrap}
+.badge-green{background:var(--green-dim);color:var(--green)}
+.badge-amber{background:var(--amber-dim);color:var(--amber)}
+.badge-red{background:var(--red-dim);color:var(--red)}
+.badge-blue{background:var(--blue-dim);color:var(--blue)}
+.badge-purple{background:var(--purple-dim);color:var(--purple)}
+
+/* OPERACIÓN — FILTER BAR */
+.op-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;box-shadow:var(--sh)}
+.op-filters .f-label{font-size:10px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+@media(max-width:768px){.op-filters{padding:10px 12px;gap:8px}}
+.op-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:1200px){.op-kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){.op-kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+@media(max-width:400px){.op-kpi-grid{grid-template-columns:1fr 1fr}}
+/* CALENDARIO DE GESTIÓN */
+.cal-controls{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.cal-due-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.cal-modes{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:2px;gap:2px}
+.cal-mode-btn{border:none;background:none;font-size:11px;font-weight:600;color:var(--muted);padding:4px 11px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.cal-mode-btn:hover{color:var(--text)}
+.cal-mode-btn.active{background:var(--surface);color:var(--purple);box-shadow:0 1px 2px rgba(15,23,42,0.1)}
+.cal-type{display:inline-block;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;margin-right:4px}
+.cal-chip-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
+.cal-prio{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:1px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0}
+.cal-prio-alta{background:var(--red-dim);color:var(--red)}
+.cal-prio-media{background:var(--amber-dim);color:var(--amber)}
+.cal-prio-baja{background:var(--green-dim);color:var(--green)}
+.cal-type-rev{background:var(--blue-dim);color:var(--blue)}
+.cal-type-ent{background:var(--green-dim);color:var(--green)}
+.cal-type-done{background:var(--green-dim);color:var(--green)}
+.cal-type-overdue{background:var(--red-dim);color:var(--red)}
+.cal-type-toent{background:var(--amber-dim);color:var(--amber)}
+.cal-chip-ent{background:rgba(22,163,74,0.045)}
+.cal-tag-early{background:var(--blue-dim);color:var(--blue)}
+.cal-nav{display:flex;align-items:center;gap:6px}
+.cal-btn{background:var(--surface);border:1px solid var(--border-md);border-radius:var(--r-sm);min-width:28px;height:28px;padding:0 8px;cursor:pointer;font-size:14px;color:var(--muted);transition:all .2s;display:inline-flex;align-items:center;justify-content:center}
+.cal-btn:hover{background:var(--surface2);color:var(--text)}
+.cal-today-btn{font-size:11px;font-weight:600;color:var(--purple)}
+.cal-range{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);min-width:128px;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-height:520px;overflow-y:auto;align-items:start}
+.cal-day{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);display:flex;flex-direction:column}
+.cal-day.cal-today-col{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple)}
+.cal-day-hdr{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:6px 9px;background:var(--surface3);font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-radius:var(--r-sm) var(--r-sm) 0 0}
+.cal-day.cal-today-col .cal-day-hdr{background:var(--purple);color:#fff}
+.cal-day-num{font-family:'DM Mono',monospace;font-size:11px}
+.cal-day-body{padding:6px;display:flex;flex-direction:column;gap:5px;flex:1}
+.cal-chip{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:6px;padding:6px 8px;cursor:pointer;transition:box-shadow .15s,transform .1s}
+.cal-chip:hover{box-shadow:0 2px 10px rgba(15,23,42,0.1);transform:translateY(-1px)}
+.cal-evtype{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)}
+.cal-flag{font-size:12px;line-height:1}
+.pf-alta{color:var(--red)} .pf-media{color:#3B82F6} .pf-baja{color:var(--faint)}
+.cal-state{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;margin-top:6px;white-space:nowrap}
+.st-grey{background:var(--surface3);color:var(--muted)}
+.st-amber{background:var(--amber-dim);color:var(--amber)}
+.st-red{background:var(--red-dim);color:var(--red)}
+.st-green{background:var(--green-dim);color:var(--green)}
+.cal-chip-desc{font-size:9px;color:var(--muted);margin-top:5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.due-badge{display:inline-block;font-size:9px;font-weight:700;background:var(--surface3);color:var(--muted);border-radius:100px;padding:0 5px;margin-left:3px;min-width:15px;text-align:center}
+.due-chip.active .due-badge{background:rgba(255,255,255,0.28);color:#fff}
+.due-chip[data-due="vencidos"].has-alert .due-badge{background:var(--red);color:#fff}
+.due-chip[data-due="vencidos"].has-alert{box-shadow:inset 0 0 0 1px var(--red)}
+/* Detalle de tarjeta del calendario (clic) */
+.cal-detail-ov{position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(2px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.cal-detail-ov.on{display:flex}
+.cal-detail{background:var(--surface);border-radius:var(--r);box-shadow:0 24px 70px rgba(15,23,42,0.32);width:100%;max-width:440px;padding:22px;position:relative;animation:modalIn .2s ease}
+.cd-evtype{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--purple)}
+.cd-title{font-size:17px;font-weight:600;letter-spacing:-.3px;margin-top:2px;padding-right:30px}
+.cd-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.cd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:4px}
+.cd-grid>div{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--text)}
+.cd-k{font-size:9px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+.cd-desc{margin-top:14px;font-size:12px}
+.cd-desc p{margin-top:3px;color:var(--text);line-height:1.5}
+.cal-chip-t{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-chip-s{font-size:9px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.cal-chip-svc{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-style:italic}
+.cal-chip-lim{font-size:9px;font-family:'DM Mono',monospace;color:var(--amber);margin-top:3px;font-weight:500}
+.cal-desc-btn{display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:none;border:none;padding:0;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:var(--purple);cursor:pointer}
+.cal-desc-arr{transition:transform .15s;font-size:8px}
+.cal-desc-btn.open .cal-desc-arr{transform:rotate(180deg)}
+.cal-desc{display:none;margin-top:4px;padding:5px 7px;background:var(--surface2);border-radius:5px;font-size:9px;color:var(--muted);line-height:1.45;white-space:normal}
+.cal-desc.open{display:block}
+.cal-tag{display:inline-block;font-size:8px;font-weight:700;padding:1px 6px;border-radius:100px;margin-top:4px;text-transform:uppercase;letter-spacing:.03em}
+.cal-tag-done{background:var(--green-dim);color:var(--green)}
+.cal-tag-late{background:var(--red-dim);color:var(--red)}
+.cal-tag-soon{background:var(--amber-dim);color:var(--amber)}
+.cal-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.cal-leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.cal-leg-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.cal-empty{font-size:11px;color:var(--faint);text-align:center;margin:auto 0}
+@media(max-width:768px){.cal-grid{grid-template-columns:1fr;gap:6px;max-height:460px}.cal-range{min-width:auto}}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;padding:7px 10px;font-size:9px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap}
+thead th.r{text-align:right}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tbody td.r{text-align:right;font-family:'DM Mono',monospace;font-size:11px}
+tbody td.muted{color:var(--muted)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+.tbl-subtotal td{background:var(--surface2);opacity:.92;border-top:1px dashed var(--border-md)}
+.tbl-total td{font-weight:700;background:var(--surface2) !important;border-top:2px solid var(--border-md)}
+.tbl-total td.r{color:var(--teal)}
+.empty{text-align:center;padding:28px;color:var(--faint);font-size:12px}
+/* ── Punto de Equilibrio ── */
+.pe-toggle{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px}
+.pe-tg{border:none;background:transparent;color:var(--muted);font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:inherit}
+.pe-tg.active{background:var(--surface);color:var(--text);box-shadow:var(--sh)}
+.pe-body{cursor:pointer;border-radius:8px}
+.pe-summary{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.pe-sm{display:flex;flex-direction:column;gap:3px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);min-width:130px}
+.pe-sm-lbl{font-size:9px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+.pe-sm-val{font-size:18px;font-weight:700;font-family:'DM Mono',monospace}
+.pe-mode-tag{margin-left:auto;align-self:center;font-size:10px;font-weight:600;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 13px}
+.pe-rows{display:flex;flex-direction:column;gap:4px}
+.pe-row{display:grid;grid-template-columns:120px 1fr 118px 46px;align-items:center;gap:12px;padding:6px 8px;margin:0 -8px;border-radius:8px;transition:background .15s}
+.pe-row:hover{background:var(--surface2)}
+.pe-name{font-size:12px;font-weight:500;display:flex;align-items:center;white-space:nowrap}
+.pe-track{position:relative;height:24px;background:var(--surface2);border-radius:7px;overflow:visible;border:1px solid var(--border);box-shadow:inset 0 1px 2px rgba(0,0,0,.05)}
+.pe-row:hover .pe-track{background:var(--surface)}
+.pe-fill{position:absolute;left:0;top:0;height:100%;border-radius:7px 0 0 7px;transition:width .6s cubic-bezier(.4,0,.2,1);min-width:3px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(0,0,0,.07)),var(--c);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.pe-fill.full{border-radius:7px}
+.pe-barval{position:absolute;top:50%;font-size:10.5px;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap;pointer-events:none}
+.pe-barval.in{transform:translate(-100%,-50%);color:#fff;padding-right:8px}
+.pe-barval.out{transform:translateY(-50%);padding-left:7px;font-weight:700}
+.pe-marker{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);border-radius:2px}
+.pe-marker::after{content:'';position:absolute;top:-4px;left:-3px;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--text)}
+.pe-val{font-size:11px;font-family:'DM Mono',monospace;text-align:right;font-weight:600;white-space:nowrap}
+.pe-goal{color:var(--faint);font-weight:400;font-family:inherit;text-transform:uppercase;font-size:8.5px;letter-spacing:.05em}
+.pe-pct{font-size:13px;font-weight:700;text-align:right;font-family:'DM Mono',monospace}
+.pe-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
+.pe-legend span{display:flex;align-items:center;gap:5px}
+.pe-legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.pe-legend .mk{width:2px;height:12px;background:var(--text);border-radius:2px}
+.pe-hint{margin-left:auto;color:var(--blue);font-weight:600}
+/* modal PE */
+.pe-assump{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.pe-ac{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--surface2)}
+.pe-ac-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600;line-height:1.3}
+.pe-ac-v{font-size:18px;font-weight:700;margin-top:5px;font-family:'DM Mono',monospace}
+.pe-table th.c,.pe-table td.c{text-align:center}
+.pe-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.pe-mcpct{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--muted)}
+.pe-note{font-size:10.5px;color:var(--faint);margin-top:14px;line-height:1.5}
+@media(max-width:768px){.pe-row{grid-template-columns:88px 1fr 60px;gap:8px}.pe-val{display:none}.pe-assump{grid-template-columns:1fr 1fr}}
+
+/* PILLS */
+.pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;white-space:nowrap}
+.pill-teal{background:var(--teal-dim);color:var(--teal)}
+.pill-blue{background:var(--blue-dim);color:var(--blue)}
+.pill-green{background:var(--green-dim);color:var(--green)}
+.pill-amber{background:var(--amber-dim);color:var(--amber)}
+.pill-red{background:var(--red-dim);color:var(--red)}
+.pill-gray{background:var(--surface2);color:var(--muted)}
+.pill-purple{background:var(--purple-dim);color:var(--purple)}
+
+/* SEMAFORO */
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.dot-green{background:var(--green)}
+.dot-amber{background:var(--amber)}
+.dot-red{background:var(--red)}
+
+/* PROGRESS BAR */
+.prog-wrap{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.prog-label{font-size:11px;color:var(--text);min-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog-bar{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .4s}
+.prog-val{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);min-width:60px;text-align:right}
+
+/* DONA SVG */
+.dona-wrap{display:flex;align-items:center;gap:20px}
+.dona-leg{display:flex;flex-direction:column;gap:6px;flex:1}
+.dona-leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.dona-leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* CICLO KPIs */
+.ciclo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ciclo-card{background:var(--surface2);border-radius:var(--r-sm);padding:14px;text-align:center}
+.ciclo-val{font-size:28px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
+.ciclo-lbl{font-size:10px;color:var(--faint);margin-top:4px}
+.ciclo-unit{font-size:11px;font-weight:500;color:var(--muted);margin-top:2px}
+
+/* SEMAFORO TABLE */
+.sem-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin-top:6px}
+.sem-seg{border-radius:2px}
+
+/* SKELETON */
+.sk{background:var(--surface2);border-radius:6px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* RESPONSIVE */
+/* ── TABLET (≤1200px) ── */
+@media(max-width:1200px){
+  .kpi-grid{grid-template-columns:repeat(4,1fr)}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .grid-3-2{grid-template-columns:1fr 1fr}
+}
+
+/* ── MOBILE (≤768px) ── */
+@media(max-width:768px){
+  /* Header */
+  .hdr{height:auto;min-height:56px;padding:8px 12px;flex-wrap:wrap;gap:6px}
+  .hdr-name{font-size:13px}
+  .hdr-tag{display:none}
+  .upd{display:none}
+  .btn-ref{font-size:11px;padding:6px 10px}
+  .btn-ref svg{width:12px;height:12px}
+
+  /* Filters */
+  .filters{padding:8px 12px;gap:6px;flex-wrap:wrap;overflow-x:hidden}
+  .f-label{font-size:9px}
+  .f-sep{display:none}
+  select{font-size:11px;padding:4px 22px 4px 8px}
+  .btn-clear-f{font-size:10px;padding:3px 8px}
+  .f-info{font-size:10px;width:100%}
+
+  /* Main */
+  .main{padding:10px 8px 40px;overflow-x:hidden}
+
+  /* KPI grid — 2 columns */
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+  .kpi{padding:12px 10px 10px;overflow:hidden}
+  .kpi-val{font-size:16px;padding-right:28px}
+  .kpi-lbl{font-size:8px;padding-right:30px;min-height:20px}
+  .kpi-sub{font-size:9px}
+  .kpi-ico{width:26px;height:26px;top:10px;right:10px}
+  .kpi-ico svg{width:12px;height:12px}
+
+  /* All grids → single column */
+  .grid-2,.grid-3,.grid-3-2,.grid-2-1{grid-template-columns:1fr;gap:10px}
+
+  /* Ciclo grid → 2 columns */
+  .ciclo-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .ciclo-val{font-size:22px}
+  .ciclo-lbl{font-size:10px}
+  .ciclo-unit{font-size:10px}
+
+  /* Cards */
+  .card{padding:14px 12px}
+  .card-title{font-size:12px}
+  .card-sub{font-size:10px}
+
+  /* Tables — horizontal scroll */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
+  table{min-width:480px}
+  thead th{font-size:8px;padding:6px 8px}
+  tbody td{font-size:11px;padding:6px 8px}
+
+  /* Progress bars */
+  .prog-label{font-size:10px;min-width:80px;max-width:100px}
+  .prog-val{font-size:10px;min-width:50px}
+
+  /* Dona */
+  .dona-wrap{flex-direction:column;align-items:center;gap:12px}
+  #svg-f{width:160px !important}
+  .dona-leg-item{font-size:10px}
+
+  /* Touch friendly */
+  select,button{min-height:34px;-webkit-tap-highlight-color:transparent}
+  *{-webkit-tap-highlight-color:transparent}
+}
+
+/* ── SMALL MOBILE (≤400px) ── */
+@media(max-width:400px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .kpi-val{font-size:14px}
+  .ciclo-grid{grid-template-columns:1fr 1fr}
+  table{min-width:380px}
+}
+
+/* TABS */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border-md);margin-bottom:18px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{background:none;border:none;padding:11px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;margin-bottom:-1px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:600}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* KPI CLICKABLE */
+.kpi.clickable{cursor:pointer}
+.kpi.clickable::after{content:'Ver detalle \203A';position:absolute;bottom:9px;right:13px;font-size:9px;font-weight:600;color:var(--purple);opacity:0;transition:opacity .2s;font-family:'DM Sans',sans-serif;pointer-events:none}
+.kpi.clickable:hover::after{opacity:.75}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(2px);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.modal-ov.on{display:flex}
+.modal{background:var(--surface);border-radius:var(--r);box-shadow:0 24px 70px rgba(15,23,42,0.32);width:100%;max-width:920px;max-height:86vh;display:flex;flex-direction:column;overflow:hidden;animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.modal-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--border);gap:12px}
+.modal-title{font-size:16px;font-weight:600;letter-spacing:-.3px}
+.modal-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.modal-close{background:var(--surface2);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:15px;color:var(--muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:var(--surface3);color:var(--text)}
+.modal-tools{padding:12px 22px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.modal-search{flex:1;min-width:180px;border:1px solid var(--border-md);border-radius:var(--r-sm);padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
+.modal-search:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-dim)}
+.modal-count{font-size:11px;font-family:'DM Mono',monospace;color:var(--faint);white-space:nowrap}
+.modal-cards{display:flex;gap:12px;padding:14px 22px 4px;flex-wrap:wrap}
+.modal-card{flex:1 1 200px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--surface2)}
+.modal-card .mc-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.modal-card .mc-val{font-size:20px;font-weight:700;margin-top:4px}
+@media(max-width:768px){.modal-cards{padding:12px 16px 2px}}
+.modal-body{overflow-y:auto;padding:4px 22px 22px}
+.modal-body table{min-width:820px}
+.modal-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 22px;border-top:1px solid var(--border-md);background:var(--surface2);flex-shrink:0;font-size:13px;font-weight:700;color:var(--text)}
+.modal-foot .mf-total{color:var(--teal);font-family:'DM Mono',monospace;font-size:14px}
+/* BARRA DE VENCIMIENTO (modal Operación + Agenda) */
+.modal-due-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 22px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.modal-due-sum{font-size:11px;display:inline-flex;gap:10px;flex-wrap:wrap}
+.due-stat{font-weight:600;white-space:nowrap}
+.due-venc{color:var(--red)} .due-pv{color:var(--amber)}
+.due-chips{display:inline-flex;background:var(--surface);border:1px solid var(--border-md);border-radius:var(--r-sm);padding:2px;gap:2px}
+.due-chip{border:none;background:none;font-size:11px;font-weight:600;color:var(--muted);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.due-chip:hover{color:var(--text)}
+.due-chip.active{background:var(--purple);color:#fff}
+.due-days{font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.due-days select{padding:3px 20px 3px 7px;font-size:11px;min-height:auto}
+.ag-due-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* Agenda con altura fija (~10 filas) y scroll vertical */
+.ag-scroll{max-height:440px;overflow-y:auto}
+.ag-scroll thead th{position:sticky;top:0;z-index:2}
+@media(max-width:768px){.modal-due-bar{padding:8px 16px}.ag-due-controls{width:100%;margin-top:8px}}
+/* MODAL — grupos expandibles por proyecto */
+.grp-parent.has-children{cursor:pointer}
+.grp-parent.has-children:hover td{background:var(--surface2)}
+.grp-arrow{display:inline-block;width:12px;color:var(--purple);font-size:9px;transition:transform .15s;margin-right:6px;vertical-align:middle}
+.grp-arrow.open{transform:rotate(90deg)}
+.grp-spacer{display:inline-block;width:12px;margin-right:6px}
+.grp-badge{display:inline-block;font-size:9px;font-weight:600;background:var(--purple-dim);color:var(--purple);border-radius:100px;padding:1px 7px;margin-left:5px}
+.grp-child td{background:var(--surface2);font-size:11px}
+.grp-child:hover td{background:var(--surface3)}
+@media(max-width:768px){.modal{max-height:90vh}.modal-ov{padding:20px 8px}.modal-hdr{padding:14px 16px 12px}.modal-tools{padding:10px 16px}.modal-body{padding:4px 16px 16px}.modal-foot{padding:11px 16px;font-size:12px}}
+
+/* --- Sistema Kacrea: KPIs por módulo --- */
+body[data-mod="resumen"] #kpi-grid>.kpi:nth-child(2),
+body[data-mod="resumen"] #kpi-grid>.kpi:nth-child(3){display:none}
+body[data-mod="cobranza"] #kpi-grid>.kpi:nth-child(n+4){display:none}
+body[data-mod="cobranza"] .kpi-grid{grid-template-columns:repeat(3,1fr)}
+body[data-mod="resumen"] .kpi-grid{grid-template-columns:repeat(7,1fr)}
+body[data-mod="operacion"] #kpi-grid{display:none}
+@media(max-width:1200px){body[data-mod="resumen"] .kpi-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:768px){body[data-mod] .kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.tab-link{text-decoration:none;margin-left:auto;color:var(--purple)!important}
+.gate{position:fixed;inset:0;z-index:999;background:var(--bg,#0d0f14);display:flex;align-items:center;justify-content:center;padding:20px}
+.gate-card{width:100%;max-width:340px;background:var(--surface,#161a22);border:1px solid var(--border-md,#2a2f3a);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:10px;color:var(--text,#eee);font-family:'DM Sans',system-ui,sans-serif}
+.gate-card h2{margin:0;font-size:22px}.gate-card p{margin:0 0 6px;color:var(--muted,#999);font-size:13px}
+.gate-card input{padding:14px;border-radius:10px;border:1.5px solid var(--border-md,#2a2f3a);background:transparent;color:inherit;font-size:20px;letter-spacing:.3em;text-align:center}
+.gate-card button{padding:12px;border-radius:10px;border:0;background:var(--purple,#7c6cf0);color:#fff;font-weight:600;cursor:pointer}
+.gate-card small{color:#f07167;text-align:center}
+</style>
+<script src="config.js"></script>
+<script>
+/* Puerta de PIN compartida con el tablero de eventos (mismo PIN, se pide una sola vez por dispositivo) */
+(function(){var pin=String((window.KC_CONFIG||{}).pin||"").trim();if(!pin)return;var key="kc_gate_"+pin;
+  try{if(localStorage.getItem(key)==="1")return;}catch(e){}
+  document.addEventListener("DOMContentLoaded",function(){
+    var ov=document.createElement("div");ov.className="gate";
+    ov.innerHTML='<form class="gate-card"><h2>Sistema Kacrea</h2><p>Ingresa el PIN del equipo.</p><input type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="PIN"><button type="submit">Entrar</button><small hidden>PIN incorrecto.</small></form>';
+    document.body.appendChild(ov);var f=ov.querySelector("form"),i=ov.querySelector("input");setTimeout(function(){i.focus()},60);
+    f.addEventListener("submit",function(e){e.preventDefault();if(i.value.trim()===pin){try{localStorage.setItem(key,"1")}catch(e2){}ov.remove();}else{ov.querySelector("small").hidden=false;i.value="";i.focus();}});
+  });})();
+</script>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-logo">K</div>
+    <div>
+      <div class="hdr-name">Sistema Kacrea</div>
+      <div class="hdr-tag">Hoja maestra · en vivo</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <span class="upd" id="upd-time">—</span>
+    <button class="btn-ref" id="btn-ref" onclick="loadData()">
+      <svg id="ref-ico" viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      Actualizar
+    </button>
+  </div>
+</header>
+
+<div class="alert" id="alert">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span id="alert-txt"></span>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <div class="f-group">
+    <span class="f-label">Período de Solicitud</span>
+    <select id="f-sol" onchange="onChangeSol()">
+      <option value="">Todo el año</option>
+    </select>
+  </div>
+
+  <button class="btn-clear-f" id="btn-clear-f" onclick="limpiarFiltros()" style="display:none">✕ Limpiar</button>
+  <span class="f-info" id="f-info"></span>
+</div>
+
+<main class="main">
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="kpi c-teal"><div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpi-lbl">Ventas - Facturado</div><div class="kpi-val sk" style="height:24px;width:90px;margin-bottom:5px"></div><div class="kpi-sub sk" style="height:11px;width:80px"></div></div>
+    <div class="kpi c-green"><div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="kpi-lbl">Cobrado</div><div class="kpi-val sk" style="height:24px;width:90px;margin-bottom:5px"></div><div class="kpi-sub sk" style="height:11px;width:80px"></div></div>
+    <div class="kpi c-amber"><div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="kpi-lbl">Por Cobrar</div><div class="kpi-val sk" style="height:24px;width:90px;margin-bottom:5px"></div><div class="kpi-sub sk" style="height:11px;width:80px"></div></div>
+    <div class="kpi c-red"><div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div><div class="kpi-lbl" title="Proyectos Pendientes por Aprobación">Proyectos Pend. Aprob.</div><div class="kpi-val sk" style="height:24px;width:90px;margin-bottom:5px"></div><div class="kpi-sub sk" style="height:11px;width:80px"></div></div>
+    <div class="kpi c-purple"><div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div><div class="kpi-lbl">En Cotización</div><div class="kpi-val sk" style="height:24px;width:90px;margin-bottom:5px"></div><div class="kpi-sub sk" style="height:11px;width:80px"></div></div>
+    <div class="kpi c-red"><div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div class="kpi-lbl">Proyectos Rechazados</div><div class="kpi-val sk" style="height:24px;width:90px;margin-bottom:5px"></div><div class="kpi-sub sk" style="height:11px;width:80px"></div></div>
+    <div class="kpi c-slate"><div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="kpi-lbl">Tasa de Cierre</div><div class="kpi-val sk" style="height:24px;width:60px;margin-bottom:5px"></div><div class="kpi-sub sk" style="height:11px;width:80px"></div></div>
+    <div class="kpi c-blue"><div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div><div class="kpi-lbl">New Leads - Requirements</div><div class="kpi-val sk" style="height:24px;width:60px;margin-bottom:5px"></div><div class="kpi-sub sk" style="height:11px;width:80px"></div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="resumen" onclick="switchTab('resumen')">Comercial</button>
+    <button class="tab" data-tab="cobranza" onclick="switchTab('cobranza')">Administrativo</button>
+    <button class="tab" data-tab="operacion" onclick="switchTab('operacion')">Operativo</button>
+    <a class="tab tab-link" href="index.html" title="Seguimiento de producción de eventos (se edita en vivo)">Eventos ↗</a>
+  </div>
+
+  <div class="tab-panel active" id="panel-resumen">
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Estatus de Presupuestos</div><div class="card-sub">Distribución por estado · proyectos únicos</div></div></div>
+    <div class="dona-wrap" id="dona-f">
+      <svg id="svg-f" viewBox="0 0 200 200" width="180" style="flex-shrink:0"></svg>
+      <div class="dona-leg" id="leg-f"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" id="card-a">
+      <div class="card-hdr"><div><div class="card-title">Ventas por Departamento</div><div class="card-sub">Monto aprobado, cobrado, en cotización, rechazados y tasa de cierre por departamento</div></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Departamento</th><th class="r">Ventas $</th><th class="r">% Total</th><th class="r">Cobrado</th><th class="r">Por Cobrar</th><th class="r" title="Proyectos Pendientes por Aprobación">Pend. Aprob.</th><th class="r">En Cotización (#)</th><th class="r">Rechazados</th><th class="r">T. Cierre</th></tr></thead><tbody id="tbody-a"><tr><td colspan="8" class="empty">Cargando...</td></tr></tbody></table></div>
+    </div>
+  </div>
+
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Ranking de Vendedores</div><div class="card-sub">Por Canal de Contacto Interno</div></div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Vendedor</th><th class="r">Leads</th><th class="r">Aprobados</th><th class="r">Rechazados</th><th class="r">T. Cierre</th><th class="r">$ Aprobado</th></tr></thead><tbody id="tbody-m"></tbody></table></div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Top 10 Marcas por Monto Aprobado</div><div class="card-sub">Clientes con mayor monto de presupuesto aprobado</div></div></div>
+      <div id="content-j"><div class="sk" style="height:160px;border-radius:8px"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Análisis de Rechazos por Servicio</div><div class="card-sub">Servicios con mayor pérdida</div></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Servicio</th><th class="r"># Rechazos</th><th class="r">$ Perdido</th><th class="r">Ticket Prom.</th></tr></thead><tbody id="tbody-k"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Top 10 Servicios Más Vendidos</div><div class="card-sub">Servicios con mayor número de proyectos aprobados</div></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Servicio</th><th class="r"># Ventas</th><th class="r">$ Vendido</th><th class="r">Ticket Prom.</th></tr></thead><tbody id="tbody-n"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Pricing Comparativo por Servicio</div><div class="card-sub">Compara el precio más caro vs. el más barato dentro de cada servicio · señala si el más caro costó más de 5 veces el más barato</div></div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Servicio</th><th class="r" title="Cantidad de proyectos aprobados de este servicio">#&nbsp;Proyectos</th><th class="r" title="Precio promedio cobrado en este servicio">Precio Promedio</th><th class="r" title="El proyecto más barato de este servicio">Precio Mínimo</th><th class="r" title="El proyecto más caro de este servicio">Precio Máximo</th><th class="r" title="Diferencia en dólares entre el más caro y el más barato">Diferencia</th><th title="Cuántas veces más caro fue el proyecto más caro vs. el más barato">Consistencia de Precio</th></tr></thead><tbody id="tbody-l"></tbody></table></div>
+  </div>
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Ciclo Comercial — Tiempos Promedio</div><div class="card-sub">Días promedio entre etapas del proceso comercial</div></div></div>
+    <div class="ciclo-grid" id="ciclo-grid">
+      <div class="ciclo-card"><div class="ciclo-val sk" style="height:36px;width:60px;margin:0 auto 6px"></div><div class="ciclo-lbl">Solicitud → Aprobación</div></div>
+      <div class="ciclo-card"><div class="ciclo-val sk" style="height:36px;width:60px;margin:0 auto 6px"></div><div class="ciclo-lbl">Aprobación → Facturación</div></div>
+      <div class="ciclo-card"><div class="ciclo-val sk" style="height:36px;width:60px;margin:0 auto 6px"></div><div class="ciclo-lbl">Aprobación → Cobro</div></div>
+      <div class="ciclo-card"><div class="ciclo-val sk" style="height:36px;width:60px;margin:0 auto 6px"></div><div class="ciclo-lbl">Ciclo Completo</div></div>
+    </div>
+  </div>
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Proceso de Licitación</div><div class="card-sub">Proyectos en proceso de licitación · oportunidades abiertas</div></div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Proyecto</th><th>Cliente</th><th>Servicio</th><th>Responsable</th><th>Depto</th><th class="r">F. Revisión</th><th class="r">F. Entrega</th><th class="r">Fecha Límite</th></tr></thead><tbody id="tbody-lic"></tbody></table></div>
+  </div>
+
+  </div><!-- /panel-resumen -->
+
+  <div class="tab-panel" id="panel-cobranza">
+
+  <div class="full card">
+    <div class="card-hdr">
+      <div><div class="card-title">Punto de Equilibrio por Departamento</div><div class="card-sub">Ingreso Neto vs. venta mínima para cubrir gastos (piso de venta) · clic para ver el detalle</div></div>
+      <div class="pe-toggle">
+        <button class="pe-tg" data-pemode="mensual" onclick="setPEMode('mensual')">Mensual</button>
+        <button class="pe-tg active" data-pemode="anual_fecha" onclick="setPEMode('anual_fecha')">Anual · a la fecha</button>
+        <button class="pe-tg" data-pemode="anual_12" onclick="setPEMode('anual_12')">Anual · 12 meses</button>
+      </div>
+    </div>
+    <div id="content-pe" class="pe-body clickable" onclick="openPEDetail()"><div class="sk" style="height:200px;border-radius:8px"></div></div>
+  </div>
+
+  <div class="full card" style="margin-bottom:14px">
+    <div id="card-b">
+      <div class="card-hdr"><div><div class="card-title">Concentración de Cartera</div><div class="card-sub">Top clientes como % del total aprobado</div></div><div class="card-badge badge-green" id="badge-b">Verde</div></div>
+      <div id="content-b"><div class="sk" style="height:120px;border-radius:8px"></div></div>
+    </div>
+  </div>
+
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Cobranza por Antigüedad</div><div class="card-sub">Desde Fecha A/R PPTO hasta hoy · Aprobados · IDs únicos agrupados</div></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Tramo</th><th class="r">Saldo CxC</th><th class="r">% CxC</th><th class="r"># Facturas</th></tr></thead><tbody id="tbody-c-ant"></tbody></table></div>
+      <div style="margin-top:14px"><div class="card-title" style="font-size:11px;margin-bottom:8px;color:var(--muted)">Top 10 Deudores</div><div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th class="r">Saldo</th><th class="r">Días</th></tr></thead><tbody id="tbody-c-top"></tbody></table></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Cobranza por Mes</div><div class="card-sub">Monto cobrado mensual</div></div></div>
+      <div id="svg-d" style="width:100%;overflow-x:auto;margin-bottom:14px"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Mes</th><th class="r"># Cobros</th><th class="r">Total Cobrado</th><th class="r">% Año</th><th>Top Cliente</th></tr></thead><tbody id="tbody-d"></tbody></table></div>
+    </div>
+  </div>
+
+  </div><!-- /panel-cobranza -->
+
+  <div class="tab-panel" id="panel-operacion">
+
+  <div class="op-filters">
+    <span class="f-label">Filtrar:</span>
+    <select id="op-f-depto" onchange="onOpDeptoChange()"><option value="">Todos los departamentos</option></select>
+    <select id="op-f-resp" onchange="renderOperacion()"><option value="">Todos los responsables</option></select>
+    <button class="btn-clear-f" id="op-clear" onclick="limpiarOpFiltros()" style="display:none">✕ Limpiar filtros</button>
+  </div>
+
+  <div class="op-kpi-grid">
+    <div class="kpi c-blue clickable" onclick="openDetail('proy_encurso')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div>
+      <div class="kpi-lbl">Proyectos en Curso</div>
+      <div class="kpi-val" id="op-kpi-encurso">—</div>    </div>
+    <div class="kpi c-amber clickable" onclick="openDetail('proy_pendiente')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="kpi-lbl">Proyectos Pendientes</div>
+      <div class="kpi-val" id="op-kpi-pendiente">—</div>    </div>
+    <div class="kpi c-green clickable" onclick="openDetail('proy_completado')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <div class="kpi-lbl">Proyectos Completados</div>
+      <div class="kpi-val" id="op-kpi-completado">—</div>    </div>
+    <div class="kpi c-purple clickable" onclick="openDetail('proy_enrevision')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <div class="kpi-lbl">Proyectos en Revisión</div>
+      <div class="kpi-val" id="op-kpi-enrevision">—</div>    </div>
+    <div class="kpi c-slate clickable" onclick="openDetail('proy_pausado')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
+      <div class="kpi-lbl">Proyectos Pausados</div>
+      <div class="kpi-val" id="op-kpi-pausado">—</div>    </div>
+  </div>
+
+  <div class="op-kpi-grid" style="grid-template-columns:1fr">
+    <div class="kpi c-teal clickable" onclick="openDetail('proy_asignados')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg></div>
+      <div class="kpi-lbl">Proyectos Asignados</div>
+      <div class="kpi-val" id="op-kpi-asignados">—</div>
+      <div class="kpi-sub">Excluye Completados y Cancelados · con responsable asignado</div>
+    </div>
+  </div>
+
+  <div class="full card">
+    <div class="card-hdr">
+      <div><div class="card-title">Calendario de Gestión — Semana</div><div class="card-sub">Gestión (Fecha de Revisión) y entregas (Fecha de Entrega) de la semana</div></div>
+      <div class="cal-controls">
+        <div class="cal-modes">
+          <button class="cal-mode-btn" data-mode="ambos" onclick="calMode('ambos')">Ambos</button>
+          <button class="cal-mode-btn" data-mode="revision" onclick="calMode('revision')">Revisión</button>
+          <button class="cal-mode-btn" data-mode="entrega" onclick="calMode('entrega')">Entrega</button>
+        </div>
+        <div class="cal-nav">
+          <button class="cal-btn" onclick="calWeek(-1)" aria-label="Semana anterior">‹</button>
+          <span class="cal-range" id="op-cal-range">—</span>
+          <button class="cal-btn" onclick="calWeek(1)" aria-label="Semana siguiente">›</button>
+          <button class="cal-btn cal-today-btn" onclick="calWeek(0,true)">Hoy</button>
+        </div>
+      </div>
+    </div>
+    <div class="cal-due-bar" id="cal-due-row">
+      <span class="f-label">Vencimiento</span>
+      <div class="due-chips">
+        <button class="due-chip active" data-due="todos" onclick="setCalDue('todos')">Todos <span class="due-badge" id="due-cnt-todos">0</span></button>
+        <button class="due-chip" data-due="porvencer" onclick="setCalDue('porvencer')">Por vencer <span class="due-badge" id="due-cnt-porvencer">0</span></button>
+        <button class="due-chip" data-due="vencidos" onclick="setCalDue('vencidos')">Vencidos <span class="due-badge" id="due-cnt-vencidos">0</span></button>
+      </div>
+      <label class="due-days">≤ <select id="cal-due-days" onchange="setDueDays(this.value)"><option>3</option><option selected>7</option><option>15</option></select> días</label>
+    </div>
+    <div id="op-cal"><div class="sk" style="height:140px;border-radius:8px"></div></div>
+  </div>
+
+
+  <div class="full card">
+    <div class="card-hdr">
+      <div><div class="card-title">Agenda de Proyectos</div><div class="card-sub">En Curso + En Revisión (sin importar PPTO) · ordenados por Fecha Límite</div></div>
+      <div class="ag-due-controls" id="ag-due-controls">
+        <span class="modal-due-sum" id="ag-due-sum"></span>
+        <div class="due-chips">
+          <button class="due-chip active" data-due="todos" onclick="setAgDue('todos')">Todos</button>
+          <button class="due-chip" data-due="porvencer" onclick="setAgDue('porvencer')">Por vencer</button>
+          <button class="due-chip" data-due="vencidos" onclick="setAgDue('vencidos')">Vencidos</button>
+        </div>
+        <label class="due-days">≤ <select id="ag-due-days" onchange="setDueDays(this.value)"><option>3</option><option selected>7</option><option>15</option></select> días</label>
+      </div>
+    </div>
+    <div class="tbl-wrap ag-scroll"><table><thead><tr><th>Responsable</th><th>Departamento</th><th>Proyecto</th><th>Servicio</th><th>Cliente</th><th>Estado</th><th class="r">F. Inicio</th><th class="r">F. Revisión</th><th class="r">Fecha Límite</th><th>Días</th></tr></thead><tbody id="tbody-agenda"></tbody></table></div>
+  </div>
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Carga por Departamento</div><div class="card-sub">Proyectos activos (En Curso + En Revisión) · sin importar PPTO</div></div></div>
+    <div id="content-g"><div class="sk" style="height:120px;border-radius:8px"></div></div>
+  </div>
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Capacidad por Persona</div><div class="card-sub">Proyectos En Curso + En Revisión asignados (sin importar PPTO) · semáforo</div></div></div>
+    <div id="content-i"><div class="sk" style="height:120px;border-radius:8px"></div></div>
+  </div>
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Desempeño por Departamento</div><div class="card-sub">Carga activa, completados y cumplimiento de entregas · el Total suma la carga de cada área</div></div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Departamento</th><th class="r">En Curso</th><th class="r">En Revisión</th><th class="r">Pendientes</th><th class="r">Pausados</th><th class="r">Completados</th><th class="r">Atrasados</th><th class="r">% A Tiempo</th></tr></thead><tbody id="tbody-desp-depto"></tbody></table></div>
+  </div>
+
+  <div class="full card">
+    <div class="card-hdr"><div><div class="card-title">Desempeño por Responsable</div><div class="card-sub">Carga activa, completados y cumplimiento de entregas · el Total suma la carga de cada área</div></div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Responsable</th><th class="r">En Curso</th><th class="r">En Revisión</th><th class="r">Pendientes</th><th class="r">Pausados</th><th class="r">Completados</th><th class="r">Atrasados</th><th class="r">% A Tiempo</th></tr></thead><tbody id="tbody-desp-resp"></tbody></table></div>
+  </div>
+
+  </div><!-- /panel-operacion -->
+
+</main>
+
+<script>
+const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbze9phxDf-p3J3hHOXTGM_o7dA88GYJhTr6MhqNKiZhf7SkqdT-ZPOF8RwFEjN_1Ure/exec';
+const CSV_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTPL2nRtCfahaZtNWC2fkEAZRaJ-rwvZl8ZI2_dbilNhfGW34MddrrG72obS50lyis1P8NsMFlGtIs/pub?gid=989528746&single=true&output=csv';
+const PROXIES     = [()=>APPS_SCRIPT, u=>`https://corsproxy.io/?${encodeURIComponent(u)}`, u=>u];
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function mesIdx(s){ if(!s)return -1; const i=MESES.findIndex(m=>s.toLowerCase().includes(m.toLowerCase())); return i; }
+function sortMeses(arr){ return [...arr].sort((a,b)=>mesIdx(a)-mesIdx(b)); }
+function norm(v){ return (v||'').toString().trim(); }
+function parseMonto(v){ return v?parseFloat(String(v).replace(/[$,\s]/g,''))||0:0; }
+function parseDate(s){ if(!s)return null; const p=s.split('/'); if(p.length===3){ const[d,m,y]=p; return new Date(+y,+m-1,+d); } return new Date(s)||null; }
+function fmt(n){ return isNaN(n)?'—':'$'+Math.round(n).toLocaleString('es-MX'); }
+function fmtK(n){ if(n>=1e6)return'$'+(n/1e6).toFixed(1)+'M'; if(n>=1e3)return'$'+(n/1e3).toFixed(0)+'k'; return fmt(n); }
+function pct(a,b){ return b>0?((a/b)*100).toFixed(1)+'%':'—'; }
+function daysBetween(a,b){ if(!a||!b)return null; return Math.round((b-a)/(1000*60*60*24)); }
+
+let RAW = [];
+
+/* ── DETECT COLUMNS ── */
+function detectCols(headers){
+  const h = headers.map(x=>norm(x).toLowerCase());
+  const f = kws=>{ for(const kw of kws){ const i=h.findIndex(x=>x.includes(kw)); if(i>=0)return i; } return -1; };
+  return {
+    id:          f(['id_proyecto','id proyecto']),
+    tipo:        f(['tipo de proyecto','tipo proyecto']),
+    mes_sol:     f(['mes de solicitud','mes solicitud']),
+    fecha_sol:   f(['fecha de solicitud','fecha solicitud']),
+    canal_int:   f(['canal de contacto interno','canal interno']),
+    cliente:     f(['cliente']),
+    proyecto:    (h.indexOf('proyecto')>=0 ? h.indexOf('proyecto') : f(['proyecto'])),
+    svc_own:     f(['servicio owner','servicio_owner','servicio']),
+    svc_asoc:    f(['servicio asociado']),
+    descripcion: f(['descripción','descripcion']),
+    est_ppto:    f(['estatus de ppto','estatus ppto']),
+    nro_ppto:    f(['nro. de presupuesto','nro de presupuesto','numero de presupuesto']),
+    fecha_ppto:  f(['fecha de ppto','fecha ppto']),
+    mes_ar:      f(['mes de a/r','mes a/r']),
+    fecha_ar:    f(['fecha de a/r','fecha a/r']),
+    monto_ppto:  f(['monto ppto','monto de ppto','monto de presupuesto']),
+    dif_camb:    f(['diferencial']),
+    est_fact:    f(['estatus de facturación','estatus de facturacion','estatus facturación']),
+    fecha_fact:  f(['fecha de facturación','fecha facturación','fecha de facturacion']),
+    nro_fact:    f(['nro. de factura','nro de factura','numero de factura']),
+    monto_cob:   f(['monto cobrado']),
+    fecha_cob:   f(['fecha de cobro','fecha cobro']),
+    mes_cob:     f(['mes de cobro','mes cobro']),
+    prioridad:   f(['prioridad']),
+    est_proy:    f(['estatus del proyecto','estatus proyecto']),
+    responsable: (h.indexOf('responsable')>=0 ? h.indexOf('responsable') : f(['responsable'])),
+    resp_ppto:   f(['responsable elab']),
+    depto:       f(['departamento']),
+    fecha_lim:   f(['fecha limite','fecha límite']),
+    fecha_ini:   f(['fecha de inicio','fecha inicio']),
+    fecha_rev:   f(['fecha de revisión','fecha revision']),
+    fecha_ent:   f(['fecha de entrega','fecha entrega']),
+  };
+}
+
+/* ── LOAD DATA ── */
+async function loadData(){
+  const btn=document.getElementById('btn-ref');
+  btn.classList.add('spin');
+  document.getElementById('alert').classList.remove('on');
+  let text=null, lastErr='';
+  for(const px of PROXIES){
+    try{
+      const url=typeof px==='function'&&px.length===0?px():px(CSV_URL);
+      const r=await fetch(url);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const t=await r.text();
+      if(!t||t.length<10)throw new Error('Vacío');
+      if(t.trim().startsWith('<')&&!t.includes(','))throw new Error('No CSV');
+      text=t; break;
+    }catch(e){lastErr=e.message;}
+  }
+  btn.classList.remove('spin');
+  if(!text){ showAlert('Error al cargar: '+lastErr); return; }
+  try{
+    const p=Papa.parse(text,{header:true,skipEmptyLines:true});
+    if(!p.data.length)throw new Error('Hoja vacía');
+    const headers=Object.keys(p.data[0]);
+    const c=detectCols(headers);
+    const g=i=>i>=0?norm(Object.values(p.data[0])[i]):'';
+    RAW=p.data.map(row=>{
+      const v=Object.values(row);
+      const get=i=>i>=0?norm(v[i]):'';
+      return{
+        id:          get(c.id),
+        tipo:        get(c.tipo),
+        mes_sol:     get(c.mes_sol),
+        fecha_sol:   parseDate(get(c.fecha_sol)),
+        canal_int:   get(c.canal_int),
+        cliente:     get(c.cliente),
+        proyecto:    get(c.proyecto),
+        svc_own:     get(c.svc_own),
+        svc_asoc:    get(c.svc_asoc),
+        descripcion: get(c.descripcion),
+        est_ppto:    get(c.est_ppto),
+        nro_ppto:    get(c.nro_ppto),
+        fecha_ppto:  parseDate(get(c.fecha_ppto)),
+        mes_ar:      get(c.mes_ar),
+        fecha_ar:    parseDate(get(c.fecha_ar)),
+        monto_ppto:  parseMonto(c.monto_ppto>=0?v[c.monto_ppto]:0),
+        dif_camb:    parseMonto(c.dif_camb>=0?v[c.dif_camb]:0),
+        est_fact:    get(c.est_fact),
+        fecha_fact:  parseDate(get(c.fecha_fact)),
+        nro_fact:    get(c.nro_fact),
+        monto_cob:   parseMonto(c.monto_cob>=0?v[c.monto_cob]:0),
+        fecha_cob:   parseDate(get(c.fecha_cob)),
+        mes_cob:     get(c.mes_cob),
+        prioridad:   get(c.prioridad),
+        est_proy:    get(c.est_proy),
+        responsable: get(c.responsable),
+        resp_ppto:   get(c.resp_ppto),
+        depto:       get(c.depto),
+        fecha_lim:   parseDate(get(c.fecha_lim)),
+        fecha_ini:   parseDate(get(c.fecha_ini)),
+        fecha_rev:   parseDate(get(c.fecha_rev)),
+        fecha_ent:   parseDate(get(c.fecha_ent)),
+      };
+    });
+    // Normalización puntual: 2 proyectos solicitados en 2025 pero cerrados en
+    // enero 2026 (cobranzas rezagadas). Se reasignan a Enero 2026 para que
+    // cuenten en el año contable 2026 (KAC-260001: su diferencial cambiario;
+    // KAC-260002: su Monto PPTO). No cambia ninguna lógica de filtros.
+    const REASIGNAR_ENERO = ['KAC-260001','KAC-260002'];
+    RAW.forEach(r=>{
+      if(REASIGNAR_ENERO.includes((r.id||'').trim())){
+        r.mes_sol   = 'Enero';
+        r.fecha_sol = new Date(2026,0,15);
+      }
+    });
+    document.getElementById('upd-time').textContent='Actualizado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    poblarFiltros();
+    renderAll();
+  }catch(e){showAlert('Error al procesar: '+e.message);}
+}
+
+function showAlert(msg){
+  document.getElementById('alert-txt').textContent=msg;
+  document.getElementById('alert').classList.add('on');
+}
+
+/* ── FILTER HELPERS ── */
+// Normaliza un valor de mes quitando el año si lo tiene (ej: "Mayo 2026" → "Mayo")
+function normMes(v){ return (v||'').trim().replace(/\s+\d{4}$/, ''); }
+
+// Poblar selects de filtro con los meses únicos del campo correspondiente
+function poblarFiltros(){
+  // Filtrar filas del año en curso usando fecha_sol (formato DD/MM/YYYY)
+  const añoActual = new Date().getFullYear();
+  const rowsAño = RAW.filter(r => {
+    if(!r.fecha_sol) return false;
+    // fecha_sol ya es un objeto Date parseado
+    return r.fecha_sol instanceof Date && r.fecha_sol.getFullYear() === añoActual;
+  });
+
+  const mesesSol = sortMeses([...new Set(
+    rowsAño.map(r => normMes(r.mes_sol)).filter(Boolean)
+  )]);
+
+
+  const sel_sol = document.getElementById('f-sol');
+  const curSol = sel_sol.value;
+  sel_sol.innerHTML = '<option value="">Todo el año</option>' +
+    mesesSol.map(m => `<option value="${m}">${m}</option>`).join('');
+  if(curSol) sel_sol.value = curSol;
+
+  poblarOpFiltros();
+}
+
+// Verifica si un valor de mes coincide con el filtro seleccionado
+function inSol(mesVal){
+  const v = document.getElementById('f-sol').value;
+  if(!v) return true;
+  return normMes(mesVal) === v;
+}
+
+function inPeriodo(mesVal){ return inSol(mesVal); }
+function filteredRows(){
+  return RAW.filter(r => inSol(r.mes_sol));
+}
+
+function onChangeSol(){
+  const vSol = document.getElementById('f-sol').value;
+  document.getElementById('btn-clear-f').style.display = vSol !== '' ? 'inline-block' : 'none';
+  renderAll();
+}
+
+function limpiarFiltros(){
+  document.getElementById('f-sol').value = '';
+  document.getElementById('btn-clear-f').style.display = 'none';
+  renderAll();
+}
+
+/* ── RENDER ALL ── */
+function renderAll(){
+  const vSol     = document.getElementById('f-sol').value;
+  const rowsInfo = RAW.filter(r => inSol(r.mes_sol));
+  document.getElementById('f-info').textContent = rowsInfo.length + ' filas' + (vSol ? ' · ' + vSol : '');
+  renderKPIs();
+  renderA();
+  renderB();
+  renderPE();
+  renderC();
+  renderD();
+  renderE();
+  renderF();
+  renderJ();
+  renderK();
+  renderL();
+  renderM();
+  renderN();
+  renderOperacion();
+}
+
+/* ══ KPIs ══ */
+function renderKPIs(){
+  // Ventas-Facturado: SUMA Monto PPTO donde Aprobado (sin filtro de fecha)
+  // ── VENTAS ─────────────────────────────────────────
+  // Aprobados en el período (por Mes de Solicitud)
+  // Excluimos cualquier proyecto que tenga un presupuesto Pausado: un PPTO
+  // pausado no cuenta como venta facturada aunque otra fila figure Aprobada.
+  const pausadoIds = new Set(
+    RAW.filter(r => r.est_ppto === 'Pausado')
+       .map(r => (r.id||'').trim()).filter(id => id !== '')
+  );
+  // Monto: Aprobados filtrados por período de solicitud (sin pausados)
+  const aprPeriodo = RAW.filter(r => r.est_ppto === 'Aprobado' && inPeriodo(r.mes_sol)
+                                 && !pausadoIds.has((r.id||'').trim()));
+  // Ventas se filtra por Mes A/R de PPTO (mes en que se aprobó/rechazó el
+  // presupuesto), no por Mes de Solicitud — así una venta cuenta en el mes
+  // en que realmente se aprobó, aunque se haya solicitado antes.
+  const aprVentas = RAW.filter(r => r.est_ppto === 'Aprobado' && inPeriodo(r.mes_ar)
+                                 && !pausadoIds.has((r.id||'').trim()));
+  // Venta Bruta = suma de Monto PPTO (Sin IVA) de Aprobados
+  const ventaBruta = aprVentas.reduce((a,r) => a + r.monto_ppto, 0);
+  // Diferencial Cambiario = suma de Monto por diferencial Cambiario (mismas filas)
+  const difCamb    = aprVentas.reduce((a,r) => a + (r.dif_camb||0), 0);
+  // Ventas-Facturado = Venta Bruta + Diferencial Cambiario
+  const ventas     = ventaBruta + difCamb;
+
+  // Cantidad: TODOS los IDs únicos Aprobados (sin pausados)
+  // Comparación case-insensitive y sin espacios para no perder ninguno
+  const nVentas = new Set(
+    RAW.filter(r => (r.est_ppto||'').trim().toLowerCase() === 'aprobado' && inPeriodo(r.mes_ar)
+                && !pausadoIds.has((r.id||'').trim()))
+       .map(r => (r.id||'').trim())
+       .filter(id => id !== '')
+  ).size;
+
+  // ── COBRADO ──────────────────────────────────────────
+  // Aprobados con Monto Cobrado > 0 en el período (por Mes de Cobro)
+  const cobrado_rows = RAW.filter(r => r.est_ppto === 'Aprobado' && r.monto_cob > 0 && inSol(r.mes_sol));
+  const cobrado      = cobrado_rows.reduce((a,r) => a + r.monto_cob, 0);
+  const nCobrado     = new Set(cobrado_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+  // ── POR COBRAR ───────────────────────────────────────
+  // Saldo pendiente por línea (solo positivos). El costo de cada línea es
+  // Monto PPTO + Diferencial Cambiario (igual que Ventas), así el saldo cuadra
+  // con Ventas − Cobrado.
+  const porcobrar_rows = aprPeriodo.filter(r => (r.monto_ppto + (r.dif_camb||0)) - r.monto_cob > 0.01);
+  const porCobrar  = porcobrar_rows.reduce((a,r) => a + ((r.monto_ppto + (r.dif_camb||0)) - r.monto_cob), 0);
+  const nPorCobrar = new Set(porcobrar_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+  // ── POR FACTURAR ─────────────────────────────────────
+  // "Enviado - Pendiente A. C." en el período
+  const fact_rows   = RAW.filter(r => r.est_ppto === 'Enviado - Pendiente A. C.' && inPeriodo(r.mes_sol));
+  const porFacturar = fact_rows.reduce((a,r) => a + r.monto_ppto, 0);
+  const nFacturar   = new Set(fact_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+  // ── EN COTIZACIÓN ────────────────────────────────────
+  // "Por Elaboración" + "En Revisión Interna" en el período
+  const cotiz_rows = RAW.filter(r =>
+    ['Por Elaboración','En Revisión Interna','Proceso de Licitación'].includes(r.est_ppto) && inPeriodo(r.mes_sol)
+  );
+  const cotizacion = cotiz_rows.reduce((a,r) => a + r.monto_ppto, 0);
+  const nCotiz     = new Set(cotiz_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+  // ── RECHAZADOS ───────────────────────────────────────
+  const rech_rows = RAW.filter(r => r.est_ppto === 'Rechazado' && inPeriodo(r.mes_sol));
+  const montoRech = rech_rows.reduce((a,r) => a + r.monto_ppto, 0);
+  const nRech     = new Set(rech_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+  // ── TASA DE CIERRE ───────────────────────────────────
+  const tasa = nVentas + nRech > 0
+    ? ((nVentas / (nVentas + nRech)) * 100).toFixed(1)
+    : 0;
+
+  // ── NEW LEADS - REQUIREMENTS ─────────────────────────
+  // Lunes: semana anterior completa · Mar-Dom: semana en curso (ver leadsWindow)
+  const lw = leadsWindow();
+  const newLeadsRows = RAW.filter(r => r.fecha_sol && r.fecha_sol >= lw.start && r.fecha_sol <= lw.end && leadQualifies(r.id, lw));
+  const nNewLeads = new Set(newLeadsRows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+  const _fD = d => d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'});
+  const wkLbl = lw.prevWeek
+    ? `sem. anterior · ${_fD(lw.start)}–${_fD(lw.end)}`
+    : `esta semana · desde ${_fD(lw.start)}`;
+
+  // ── PRESUPUESTOS PAUSADOS (atípicos) ─────────────────
+  // No cuenta como Aprobado ni Rechazado, sin importar si tiene Fecha de A/R
+  const paus_rows = RAW.filter(r => r.est_ppto === 'Pausado' && inPeriodo(r.mes_sol));
+  const montoPaus = paus_rows.reduce((a,r) => a + r.monto_ppto, 0);
+  const nPaus     = new Set(paus_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi c-teal clickable" onclick="openDetail('ventas')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="kpi-lbl">Ventas - Facturado</div>
+      <div class="kpi-val">${fmt(ventas)}</div>
+      <div class="kpi-sub"><b>${nVentas}</b> proyectos únicos aprobados</div>
+    </div>
+    <div class="kpi c-green clickable" onclick="openDetail('cobrado')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="kpi-lbl">Cobrado</div>
+      <div class="kpi-val">${fmt(cobrado)}</div>
+      <div class="kpi-sub"><b>${nCobrado}</b> proyectos únicos cobrados</div>
+    </div>
+    <div class="kpi c-amber clickable" onclick="openDetail('porcobrar')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="kpi-lbl">Por Cobrar</div>
+      <div class="kpi-val">${fmt(porCobrar)}</div>
+      <div class="kpi-sub"><b>${nPorCobrar}</b> proyectos · saldo pendiente</div>
+    </div>
+    <div class="kpi c-red clickable" onclick="openDetail('porfacturar')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
+      <div class="kpi-lbl" title="Proyectos Pendientes por Aprobación">Proyectos Pend. Aprob.</div>
+      <div class="kpi-val">${fmt(porFacturar)}</div>
+      <div class="kpi-sub"><b>${nFacturar}</b> proyectos · Enviado al cliente</div>
+    </div>
+    <div class="kpi c-purple clickable" onclick="openDetail('cotizacion')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+      <div class="kpi-lbl">En Cotización</div>
+      <div class="kpi-val">${fmt(cotizacion)}</div>
+      <div class="kpi-sub"><b>${nCotiz}</b> proyectos · Por Elab. + Rev. Int. + Licitación</div>
+    </div>
+    <div class="kpi c-red clickable" onclick="openDetail('rechazados')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <div class="kpi-lbl">Proyectos Rechazados</div>
+      <div class="kpi-val">${fmt(montoRech)}</div>
+      <div class="kpi-sub"><b>${nRech}</b> proyectos únicos rechazados</div>
+    </div>
+    <div class="kpi c-slate clickable" onclick="openDetail('tasa')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <div class="kpi-lbl">Tasa de Cierre</div>
+      <div class="kpi-val">${tasa}%</div>
+      <div class="kpi-sub"><b>${nVentas}</b> apr · <b>${nRech}</b> rech</div>
+    </div>
+    <div class="kpi c-blue clickable" onclick="openDetail('newleads')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+      <div class="kpi-lbl">New Leads - Requirements</div>
+      <div class="kpi-val">${nNewLeads}</div>
+      <div class="kpi-sub">${wkLbl}</div>
+    </div>
+    <div class="kpi c-slate clickable" onclick="openDetail('pausados')">
+      <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
+      <div class="kpi-lbl">Proyectos Pausados</div>
+      <div class="kpi-val">${fmt(montoPaus)}</div>
+      <div class="kpi-sub"><b>${nPaus}</b> proyectos · atípicos</div>
+    </div>`;
+}
+
+/* ══ A: VENTAS POR DEPARTAMENTO ══ */
+function renderA(){
+  const deptos = [...new Set(RAW.filter(r=>inPeriodo(r.mes_sol)).map(r=>r.depto).filter(Boolean))].sort();
+  // IDs con presupuesto Pausado: se excluyen de Ventas (no facturan)
+  const pausadoIds = new Set(
+    RAW.filter(r => r.est_ppto === 'Pausado')
+       .map(r => (r.id||'').trim()).filter(id => id !== '')
+  );
+
+  const data = deptos.map(d => {
+    const dr = RAW.filter(r => r.depto === d && inSol(r.mes_sol));
+
+    // Ventas: Aprobados suma SOLO Monto PPTO (venta bruta); el Diferencial
+    // Cambiario va aparte en su propia fila, antes del Total (excluye pausados)
+    const apr_rows = dr.filter(r => r.est_ppto === 'Aprobado' && !pausadoIds.has((r.id||'').trim()));
+    const ventas   = apr_rows.reduce((a,r) => a + r.monto_ppto, 0);
+    const nApr     = new Set(apr_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+    // Cobrado: Aprobados con Monto Cobrado > 0
+    const cob_rows = dr.filter(r => r.est_ppto === 'Aprobado' && r.monto_cob > 0);
+    const cobrado  = cob_rows.reduce((a,r) => a + r.monto_cob, 0);
+
+    // Por Cobrar: saldo pendiente por línea (solo positivos), costo = PPTO + Diferencial
+    const porCobrar = apr_rows.filter(r => (r.monto_ppto + (r.dif_camb||0)) - r.monto_cob > 0.01).reduce((a,r) => a + ((r.monto_ppto + (r.dif_camb||0)) - r.monto_cob), 0);
+
+    // Por Facturar: Enviado - Pendiente A. C.
+    const fact_rows_d = dr.filter(r => r.est_ppto === 'Enviado - Pendiente A. C.');
+    const porFacturar_d = fact_rows_d.reduce((a,r) => a + r.monto_ppto, 0);
+
+    // En Cotización: Por Elaboración + En Revisión Interna (cantidad de proyectos)
+    const cotiz_rows = dr.filter(r => ['Por Elaboración','En Revisión Interna','Proceso de Licitación'].includes(r.est_ppto));
+    const nCotiz_d   = new Set(cotiz_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+    // Rechazados: suma Monto PPTO
+    const rech_rows = dr.filter(r => r.est_ppto === 'Rechazado');
+    const rechazado = rech_rows.reduce((a,r) => a + r.monto_ppto, 0);
+    const nRech     = new Set(rech_rows.map(r=>(r.id||'').trim()).filter(id=>id!=='')).size;
+
+    // Tasa de cierre por departamento
+    const tasa = nApr + nRech > 0
+      ? ((nApr / (nApr + nRech)) * 100).toFixed(0) + '%'
+      : '—';
+
+    return { d, ventas, cobrado, porCobrar, porFacturar_d, nCotiz_d, rechazado, nApr, nRech, tasa };
+  }).filter(r => r.ventas > 0 || r.cotizacion > 0 || r.rechazado > 0)
+    .sort((a,b) => b.ventas - a.ventas);
+
+  // Diferencial Cambiario total (mismas filas de venta: Aprobado, período, sin pausados)
+  const difTotal = RAW.filter(r => r.est_ppto === 'Aprobado' && inSol(r.mes_sol) && !pausadoIds.has((r.id||'').trim()))
+                      .reduce((a,r) => a + (r.dif_camb||0), 0);
+  const totalBruta    = data.reduce((a,r) => a + r.ventas, 0);
+  const totalVentas   = totalBruta + difTotal;
+  const totalCobrado  = data.reduce((a,r) => a + r.cobrado, 0);
+  const totalPorCob   = data.reduce((a,r) => a + r.porCobrar, 0);
+  const totalPorFact  = data.reduce((a,r) => a + r.porFacturar_d, 0);
+  const totalNcotiz   = data.reduce((a,r) => a + r.nCotiz_d, 0);
+  const totalRech     = data.reduce((a,r) => a + r.rechazado, 0);
+
+  document.getElementById('tbody-a').innerHTML = data.map(r => {
+    const pct = totalVentas > 0 ? (r.ventas / totalVentas * 100).toFixed(1) : '0';
+    const tasaCol = r.tasa === '—' ? 'pill-gray'
+      : parseFloat(r.tasa) >= 60 ? 'pill-green'
+      : parseFloat(r.tasa) >= 40 ? 'pill-amber' : 'pill-red';
+    return `<tr>
+      <td style="font-weight:500"><span class="dot" style="background:${deptoColor(r.d)}"></span>${r.d}</td>
+      <td class="r" style="color:var(--teal);font-weight:600">${fmt(r.ventas)}</td>
+      <td class="r"><span class="pill pill-blue">${pct}%</span></td>
+      <td class="r" style="color:var(--green)">${fmt(r.cobrado)}</td>
+      <td class="r" style="color:var(--amber)">${fmt(r.porCobrar)}</td>
+      <td class="r" style="color:var(--red)">${fmt(r.porFacturar_d)}</td>
+      <td class="r" style="color:var(--purple)">${r.nCotiz_d}</td>
+      <td class="r" style="color:var(--red)">${fmt(r.rechazado)}</td>
+      <td class="r"><span class="pill ${tasaCol}">${r.tasa}</span></td>
+    </tr>`;
+  }).join('') + `
+    <tr class="tbl-subtotal">
+      <td style="font-weight:600">Ingreso Neto</td>
+      <td class="r" style="color:var(--teal);font-weight:600">${fmt(totalBruta)}</td>
+      <td class="r"><span class="pill pill-blue">${totalVentas>0?(totalBruta/totalVentas*100).toFixed(1):'0'}%</span></td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+    </tr>
+    <tr class="tbl-subtotal">
+      <td style="font-weight:500">Diferencial Cambiario</td>
+      <td class="r" style="color:var(--teal);font-weight:600">${fmt(difTotal)}</td>
+      <td class="r"><span class="pill pill-blue">${totalVentas>0?(difTotal/totalVentas*100).toFixed(1):'0'}%</span></td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+      <td class="r">—</td>
+    </tr>
+    <tr class="tbl-total">
+      <td><b>Total</b></td>
+      <td class="r">${fmt(totalVentas)}</td>
+      <td class="r">100%</td>
+      <td class="r">${fmt(totalCobrado)}</td>
+      <td class="r">${fmt(totalPorCob)}</td>
+      <td class="r">${fmt(totalPorFact)}</td>
+      <td class="r">${totalNcotiz}</td>
+      <td class="r">${fmt(totalRech)}</td>
+      <td class="r">—</td>
+    </tr>`;
+}
+/* ══ B: CONCENTRACIÓN DE CARTERA ══ */
+function renderB(){
+  const apr   = RAW.filter(r => r.est_ppto === 'Aprobado' && inPeriodo(r.mes_sol));
+  const total = apr.reduce((a,r) => a + r.monto_ppto, 0);
+
+  const byCliente = new Map();
+  apr.forEach(r => {
+    const cli = (r.cliente || 'Sin nombre').trim();
+    byCliente.set(cli, (byCliente.get(cli) || 0) + r.monto_ppto);
+  });
+  const sorted = [...byCliente.entries()].sort((a,b) => b[1] - a[1]);
+
+  const top3  = sorted.slice(0,3).reduce((a,r)  => a + r[1], 0);
+  const top5  = sorted.slice(0,5).reduce((a,r)  => a + r[1], 0);
+  const top10 = sorted.slice(0,10).reduce((a,r) => a + r[1], 0);
+  const p3  = total > 0 ? (top3/total*100).toFixed(1)  : 0;
+  const p5  = total > 0 ? (top5/total*100).toFixed(1)  : 0;
+  const p10 = total > 0 ? (top10/total*100).toFixed(1) : 0;
+
+  const color = p3 > 70 ? 'badge-red' : p3 > 50 ? 'badge-amber' : 'badge-green';
+  const label = p3 > 70 ? '🔴 Riesgo Alto' : p3 > 50 ? '🟡 Riesgo Medio' : '🟢 Concentración OK';
+  document.getElementById('badge-b').className = 'card-badge ' + color;
+  document.getElementById('badge-b').textContent = label;
+
+  document.getElementById('content-b').innerHTML = `
+    <div style="margin-bottom:12px">
+      ${[['Top 3',p3,top3,'teal'],['Top 5',p5,top5,'blue'],['Top 10',p10,top10,'purple']].map(([lbl,p,v,col])=>`
+      <div class="prog-wrap">
+        <span class="prog-label" style="color:var(--${col});font-weight:600">${lbl}</span>
+        <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(p,100)}%;background:var(--${col})"></div></div>
+        <span class="prog-val">${p}% · ${fmt(v)}</span>
+      </div>`).join('')}
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>Cliente</th><th class="r">Monto</th><th class="r">%</th></tr></thead>
+      <tbody>${sorted.slice(0,10).map(([cli,v],i) => `
+        <tr>
+          <td class="muted">${i+1}</td>
+          <td style="font-weight:500">${cli}</td>
+          <td class="r" style="color:var(--teal)">${fmt(v)}</td>
+          <td class="r"><span class="pill pill-blue">${total>0?(v/total*100).toFixed(1):0}%</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+/* ══ PUNTO DE EQUILIBRIO POR DEPARTAMENTO ══ */
+// Datos fijos del Escenario 2. Mapeo: 'Social Media' (Excel) = 'Digital' (tablero).
+const PE_GLOBAL = { costosFijos:9600, presupuestoGastos:13250, egresosFijos:22850, margenMeta:0.30 };
+const PE_CONFIG = {
+  'Producción':  { costoFijo:1400, gastoAsignado:2650, pctGasto:0.20, piso:25000, ingProm:19915.97, cvProm:13780.64 },
+  'Digital':     { costoFijo:2700, gastoAsignado:2650, pctGasto:0.20, piso:6000,  ingProm:5025.00,  cvProm:442.08 },
+  'Marketing':   { costoFijo:3400, gastoAsignado:2650, pctGasto:0.20, piso:6500,  ingProm:3111.08,  cvProm:193.14 },
+  'Diseño':      { costoFijo:1400, gastoAsignado:2650, pctGasto:0.20, piso:4100,  ingProm:4181.08,  cvProm:25.75 },
+  'Audiovisual': { costoFijo:700,  gastoAsignado:2650, pctGasto:0.20, piso:4000,  ingProm:2628.50,  cvProm:405.31 }
+};
+const PE_ORDER = ['Producción','Digital','Marketing','Diseño','Audiovisual'];
+let PE_MODE = 'anual_fecha';  // 'mensual' | 'anual_fecha' | 'anual_12'
+
+// Clave año-mes de una fecha (para comparar por fecha real, no por nombre de mes)
+function peYM(d){ return (d instanceof Date && !isNaN(d)) ? d.getFullYear()*12 + d.getMonth() : null; }
+// Meses transcurridos = mes del calendario en curso del año contable (ej. Julio → 7).
+function peMesesTranscurridos(){ return Math.min(new Date().getMonth()+1, 12); }
+// Ingreso Neto (Monto PPTO Aprobado, sin pausados, sin diferencial) por depto
+function peIngresoNeto(depto, mode){
+  const pausados = new Set(RAW.filter(r=>r.est_ppto==='Pausado').map(r=>(r.id||'').trim()).filter(Boolean));
+  const base = RAW.filter(r=> r.depto===depto && r.est_ppto==='Aprobado' && !pausados.has((r.id||'').trim()));
+  const anual = base.reduce((a,r)=>a+r.monto_ppto,0);
+  // Anual · 12 meses: todo el año
+  if(mode==='anual_12') return { valor:anual, etiqueta:'del año' };
+  // Anual · a la fecha: ventas cuya fecha ya ocurrió (<= mes actual). Todo lo
+  // histórico cuenta; si una fila no tuviera fecha, se incluye por defecto.
+  if(mode==='anual_fecha'){
+    const kMax = new Date().getFullYear()*12 + new Date().getMonth();
+    const v = base.filter(r=>{ const k=peYM(r.fecha_sol); return k===null || k<=kMax; })
+                  .reduce((a,r)=>a+r.monto_ppto,0);
+    return { valor:v, etiqueta:'a la fecha' };
+  }
+  // Mensual
+  const vSel = document.getElementById('f-sol').value;
+  if(vSel){ return { valor: base.filter(r=>normMes(r.mes_sol)===vSel).reduce((a,r)=>a+r.monto_ppto,0), etiqueta:vSel }; }
+  return { valor: anual/12, etiqueta:'prom. mensual' };
+}
+function peTarget(depto, mode){
+  const c=PE_CONFIG[depto];
+  if(mode==='mensual') return c.piso;
+  if(mode==='anual_fecha') return c.piso * peMesesTranscurridos();
+  return c.piso * 12;  // anual_12
+}
+function peColor(pct){ return pct>=100?'#22C55E': pct>=75?'#F59E0B':'#DC2626'; }
+function peEstado(pct){ return pct>=100?'Cubre': pct>=75?'Cerca':'Debajo'; }
+
+function renderPE(){
+  const el=document.getElementById('content-pe'); if(!el) return;
+  const mode=PE_MODE;
+  const rows = PE_ORDER.filter(d=>PE_CONFIG[d]).map(d=>{
+    const ing = peIngresoNeto(d, mode);
+    const target = peTarget(d, mode);
+    const pct = target>0 ? ing.valor/target*100 : 0;
+    return { d, ing:ing.valor, target, pct };
+  });
+  const barsHtml = rows.map(r=>{
+    const scale = Math.max(r.ing, r.target)*1.15 || 1;
+    const fillW = Math.min(r.ing/scale*100, 100);
+    const markL = Math.min(r.target/scale*100, 100);
+    const col = peColor(r.pct);
+    const inside = fillW > 32;   // el monto cabe dentro de la barra
+    return `<div class="pe-row">
+      <div class="pe-name"><span class="dot" style="background:${deptoColor(r.d)}"></span>${r.d}</div>
+      <div class="pe-track">
+        <div class="pe-fill${fillW>=99?' full':''}" style="width:${fillW}%;--c:${col}"></div>
+        <div class="pe-barval ${inside?'in':'out'}" style="left:${fillW}%;${inside?'':'color:'+col}">${fmt(r.ing)}</div>
+        <div class="pe-marker" style="left:${markL}%" title="Piso: ${fmt(r.target)}"></div>
+      </div>
+      <div class="pe-val"><span class="pe-goal">Meta</span> ${fmt(r.target)}</div>
+      <div class="pe-pct" style="color:${col}">${r.pct.toFixed(0)}%</div>
+    </div>`;
+  }).join('');
+  const totIng = rows.reduce((a,r)=>a+r.ing,0);
+  const totTarget = rows.reduce((a,r)=>a+r.target,0);
+  const totPct = totTarget>0? totIng/totTarget*100 : 0;
+  // Departamentos sin Punto de Equilibrio definido todavía (ej. Arquitectura):
+  // su ingreso se suma al Ingreso Neto general, pero no tienen barra propia
+  // ni piso/meta con qué compararse, así que no afectan Meta ni Cumplimiento.
+  const otherDepts = [...new Set(RAW.map(r=>r.depto).filter(Boolean))].filter(d=>!PE_CONFIG[d]);
+  const otherIng = otherDepts.reduce((a,d)=>a+peIngresoNeto(d,mode).valor,0);
+  const totIngAll = totIng + otherIng;
+  const vSel = document.getElementById('f-sol').value;
+  const esAnual = mode!=='mensual';
+  const meses = peMesesTranscurridos();
+  const lblMode = mode==='anual_12' ? 'Anual · piso × 12 meses'
+    : mode==='anual_fecha' ? `Anual · a la fecha (${meses} ${meses===1?'mes':'meses'} · piso × ${meses})`
+    : (vSel? 'Mensual · '+vSel : 'Mensual · promedio');
+  const metaLbl = mode==='anual_fecha' ? 'Meta a la fecha (piso)' : 'Meta total (piso)';
+  const ingTitle = otherIng>0 ? `Incluye ${otherDepts.join(', ')} (${fmt(otherIng)}), que aún no ${otherDepts.length>1?'tienen':'tiene'} Punto de Equilibrio definido` : '';
+  el.innerHTML = `
+    <div class="pe-summary">
+      <div class="pe-sm"><span class="pe-sm-lbl"${ingTitle?` title="${ingTitle}"`:''}>Ingreso Neto ${esAnual?'del año':'del período'}${otherIng>0?' *':''}</span><span class="pe-sm-val" style="color:var(--teal)">${fmt(totIngAll)}</span></div>
+      <div class="pe-sm"><span class="pe-sm-lbl">${metaLbl}</span><span class="pe-sm-val">${fmt(totTarget)}</span></div>
+      <div class="pe-sm"><span class="pe-sm-lbl">Cumplimiento</span><span class="pe-sm-val" style="color:${peColor(totPct)}">${totPct.toFixed(0)}%</span></div>
+      <div class="pe-mode-tag">${lblMode}</div>
+    </div>
+    <div class="pe-rows">${barsHtml}</div>
+    ${otherIng>0?`<div style="font-size:10.5px;color:var(--faint);margin-top:6px;line-height:1.5">* Incluye ${otherDepts.join(', ')} (${fmt(otherIng)}), que aún no ${otherDepts.length>1?'tienen':'tiene'} Punto de Equilibrio definido</div>`:''}
+    <div class="pe-legend"><span><i style="background:#22C55E"></i>Cubre (≥100%)</span><span><i style="background:#F59E0B"></i>Cerca (75–99%)</span><span><i style="background:#DC2626"></i>Debajo (&lt;75%)</span><span class="pe-legend-mark"><i class="mk"></i>Piso de venta</span><span class="pe-hint">Clic para ver el detalle →</span></div>`;
+}
+
+function setPEMode(mode){
+  if(PE_MODE===mode) return;
+  PE_MODE=mode;
+  document.querySelectorAll('.pe-tg').forEach(b=>b.classList.toggle('active', b.dataset.pemode===mode));
+  renderPE();
+}
+
+function openPEDetail(){
+  const g=PE_GLOBAL;
+  // Departamentos sin Punto de Equilibrio definido todavía (ej. Arquitectura):
+  // no tienen fila propia en esta tabla (no hay Costo Fijo/Piso que mostrar),
+  // pero su Ingreso Neto se nota aparte para que cuadre con la tarjeta.
+  const otherDepts = [...new Set(RAW.map(r=>r.depto).filter(Boolean))].filter(d=>!PE_CONFIG[d]);
+  const otherIngMes = otherDepts.reduce((a,d)=>a+peIngresoNeto(d,'mensual').valor,0);
+  const otherIngAnio = otherDepts.reduce((a,d)=>a+peIngresoNeto(d,'anual_12').valor,0);
+  const bodyRows = PE_ORDER.filter(d=>PE_CONFIG[d]).map(d=>{
+    const c=PE_CONFIG[d];
+    const gastos=c.costoFijo+c.gastoAsignado;
+    const ingProm=c.ingProm||0, cvProm=c.cvProm||0;
+    const mcProm=ingProm-cvProm, pctMc=ingProm>0?mcProm/ingProm*100:0;
+    const ingMes=peIngresoNeto(d,'mensual').valor, ingAnio=peIngresoNeto(d,'anual_12').valor;
+    const pctMes=c.piso>0?ingMes/c.piso*100:0, pctAnio=(c.piso*12)>0?ingAnio/(c.piso*12)*100:0;
+    return {d,c,gastos,ingProm,cvProm,mcProm,pctMc,ingMes,ingAnio,pctMes,pctAnio};
+  });
+  const tot={cf:0,ga:0,gastos:0,ingProm:0,cvProm:0,mcProm:0,piso:0,pisoA:0,ingMes:0,ingAnio:0};
+  bodyRows.forEach(r=>{tot.cf+=r.c.costoFijo;tot.ga+=r.c.gastoAsignado;tot.gastos+=r.gastos;tot.ingProm+=r.ingProm;tot.cvProm+=r.cvProm;tot.mcProm+=r.mcProm;tot.piso+=r.c.piso;tot.pisoA+=r.c.piso*12;tot.ingMes+=r.ingMes;tot.ingAnio+=r.ingAnio;});
+  const totPctMes=tot.piso>0?tot.ingMes/tot.piso*100:0, totPctAnio=tot.pisoA>0?tot.ingAnio/tot.pisoA*100:0;
+  const totPctMc=tot.ingProm>0?tot.mcProm/tot.ingProm*100:0;
+  const vSel=document.getElementById('f-sol').value;
+  const mesLbl=vSel||'prom. mensual';
+  const pill=(pct)=>`<span class="pe-badge" style="background:${peColor(pct)}1a;color:${peColor(pct)}">${pct.toFixed(0)}% · ${peEstado(pct)}</span>`;
+  document.getElementById('pe-modal-body').innerHTML=`
+    <div class="pe-assump">
+      <div class="pe-ac"><div class="pe-ac-l">Costos fijos mensuales</div><div class="pe-ac-v">${fmt(g.costosFijos)}</div></div>
+      <div class="pe-ac"><div class="pe-ac-l">Presupuesto mensual de Gastos</div><div class="pe-ac-v">${fmt(g.presupuestoGastos)}</div></div>
+      <div class="pe-ac"><div class="pe-ac-l">Egresos mensuales fijos</div><div class="pe-ac-v">${fmt(g.egresosFijos)}</div></div>
+      <div class="pe-ac"><div class="pe-ac-l">% Margen meta s/PE</div><div class="pe-ac-v">${(g.margenMeta*100).toFixed(1)}%</div></div>
+    </div>
+    <div class="tbl-wrap"><table class="pe-table">
+      <thead><tr>
+        <th>Departamento</th><th class="r">Costo Fijo</th><th class="r">Gasto Asig.</th><th class="r">Gastos/mes</th>
+        <th class="r">Ingresos Prom.</th><th class="r">Costo Var. Prom.</th><th class="r">Mc Prom.</th><th class="c">% Mc</th>
+        <th class="r">Piso/mes</th><th class="r">Ing. Neto (${mesLbl})</th><th class="c">% Mensual</th>
+        <th class="r">Piso/año</th><th class="r">Ing. Neto año</th><th class="c">% Anual</th>
+      </tr></thead>
+      <tbody>
+        ${bodyRows.map(r=>`<tr>
+          <td style="font-weight:500"><span class="dot" style="background:${deptoColor(r.d)}"></span>${r.d}</td>
+          <td class="r">${fmt(r.c.costoFijo)}</td>
+          <td class="r">${fmt(r.c.gastoAsignado)}</td>
+          <td class="r">${fmt(r.gastos)}</td>
+          <td class="r">${fmt(r.ingProm)}</td>
+          <td class="r">${fmt(r.cvProm)}</td>
+          <td class="r" style="font-weight:600">${fmt(r.mcProm)}</td>
+          <td class="c"><span class="pe-mcpct">${r.pctMc.toFixed(0)}%</span></td>
+          <td class="r" style="font-weight:600">${fmt(r.c.piso)}</td>
+          <td class="r" style="color:var(--teal)">${fmt(r.ingMes)}</td>
+          <td class="c">${pill(r.pctMes)}</td>
+          <td class="r" style="font-weight:600">${fmt(r.c.piso*12)}</td>
+          <td class="r" style="color:var(--teal)">${fmt(r.ingAnio)}</td>
+          <td class="c">${pill(r.pctAnio)}</td>
+        </tr>`).join('')}
+        <tr class="tbl-total">
+          <td><b>Total</b></td>
+          <td class="r">${fmt(tot.cf)}</td>
+          <td class="r">${fmt(tot.ga)}</td>
+          <td class="r">${fmt(tot.gastos)}</td>
+          <td class="r">${fmt(tot.ingProm)}</td>
+          <td class="r">${fmt(tot.cvProm)}</td>
+          <td class="r">${fmt(tot.mcProm)}</td>
+          <td class="c"><span class="pe-mcpct">${totPctMc.toFixed(0)}%</span></td>
+          <td class="r">${fmt(tot.piso)}</td>
+          <td class="r">${fmt(tot.ingMes)}</td>
+          <td class="c">${pill(totPctMes)}</td>
+          <td class="r">${fmt(tot.pisoA)}</td>
+          <td class="r">${fmt(tot.ingAnio)}</td>
+          <td class="c">${pill(totPctAnio)}</td>
+        </tr>
+      </tbody>
+    </table></div>
+    ${otherDepts.length?`<div class="pe-note">* ${otherDepts.join(', ')} ${otherDepts.length>1?'aún no tienen':'aún no tiene'} Punto de Equilibrio definido, por eso no ${otherDepts.length>1?'aparecen':'aparece'} en esta tabla. Su Ingreso Neto (mensual: ${fmt(otherIngMes)} · anual: ${fmt(otherIngAnio)}) sí se incluye en el total de la tarjeta de arriba.</div>`:''}
+    <div class="pe-note">Ingresos / Costo Variable / Mc Promedio y % de Margen de Contribución provienen del Escenario 2. Mc Promedio = Ingresos Prom. − Costo Var. Prom.; % Mc = Mc ÷ Ingresos. Punto de equilibrio = piso de venta mensual (venta mínima para cubrir Costo Fijo + Gasto Asignado); anual = piso × 12. Ingreso Neto = Monto PPTO aprobado (sin diferencial cambiario ni pausados).</div>`;
+  document.getElementById('pe-modal-ov').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closePEDetail(){ document.getElementById('pe-modal-ov').classList.remove('on'); document.body.style.overflow=''; }
+
+/* ══ C: COBRANZA POR ANTIGÜEDAD ══ */
+function renderC(){
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const apr      = RAW.filter(r => r.est_ppto === 'Aprobado' && r.fecha_ar && inSol(r.mes_sol));
+  const withDebt = apr.filter(r => r.monto_ppto > r.monto_cob);
+
+  // Agrupar por cliente — fecha más antigua de deuda
+  const byCliente = new Map();
+  withDebt.forEach(r => {
+    const cli = (r.cliente || '—').trim();
+    if(!byCliente.has(cli)) byCliente.set(cli, {monto:0, cobrado:0, saldo:0, fecha_ar:r.fecha_ar});
+    const d = byCliente.get(cli);
+    d.monto   += r.monto_ppto;
+    d.cobrado += r.monto_cob;
+    d.saldo   += (r.monto_ppto - r.monto_cob);
+    if(r.fecha_ar < d.fecha_ar) d.fecha_ar = r.fecha_ar;
+  });
+
+  // Lista de todos los deudores con días calculados
+  const deudores = [...byCliente.entries()]
+    .map(([cli, d]) => ({
+      cli,
+      saldo: d.saldo,
+      dias:  Math.max(0, Math.round((today - d.fecha_ar) / (1000*60*60*24)))
+    }))
+    .filter(r => r.saldo > 0)
+    .sort((a,b) => b.saldo - a.saldo);
+
+  const totalCxC = deudores.reduce((a,r) => a + r.saldo, 0);
+
+  // Buckets derivados de la misma lista de deudores
+  const buckets = [
+    {label:'0-30 días',  min:0,  max:30,    col:'pill-blue'},
+    {label:'31-60 días', min:31, max:60,    col:'pill-blue'},
+    {label:'61-90 días', min:61, max:90,    col:'pill-amber'},
+    {label:'90+ días',   min:91, max:99999, col:'pill-red'},
+  ];
+
+  document.getElementById('tbody-c-ant').innerHTML = buckets.map(b => {
+    const bDeu   = deudores.filter(r => r.dias >= b.min && r.dias <= b.max);
+    const saldo  = bDeu.reduce((a,r) => a + r.saldo, 0);
+    const pctVal = totalCxC > 0 ? (saldo/totalCxC*100).toFixed(1) : 0;
+    return `<tr>
+      <td><span class="pill ${b.col}">${b.label}</span></td>
+      <td class="r" style="color:var(--amber);font-weight:600">${fmt(saldo)}</td>
+      <td class="r">${pctVal}%</td>
+      <td class="r">${bDeu.length} cliente${bDeu.length!==1?'s':''}</td>
+    </tr>`;
+  }).join('');
+
+  // Todos los deudores — solo Cliente | Saldo | Días
+  document.getElementById('tbody-c-top').innerHTML = deudores.map(r => {
+    const col = r.dias > 90 ? 'pill-red' : r.dias > 60 ? 'pill-amber' : 'pill-blue';
+    return `<tr>
+      <td style="font-weight:500">${r.cli}</td>
+      <td class="r" style="color:var(--amber);font-weight:600">${fmt(r.saldo)}</td>
+      <td class="r"><span class="pill ${col}">${r.dias}d</span></td>
+    </tr>`;
+  }).join('') + `
+    <tr class="tbl-total">
+      <td><b>Total</b></td>
+      <td class="r" style="color:var(--amber)">${fmt(totalCxC)}</td>
+      <td class="r">—</td>
+    </tr>`;
+}
+
+
+/* ══ D: COBRANZA POR MES ══ */
+function renderD(){
+  // Misma base exacta que KPI Cobrado: Aprobados con Monto Cobrado > 0
+  // SIN filtrar por mes_cob — incluye TODOS los registros cobrados
+  const cobRows = RAW.filter(r => r.est_ppto === 'Aprobado' && r.monto_cob > 0 && inSol(r.mes_sol));
+
+  const byMes = new Map();
+  cobRows.forEach(r => {
+    // Usar mes_cob; si está vacío intentar derivar de fecha_cob
+    let mes = (r.mes_cob || '').trim();
+    if(!mes && r.fecha_cob){
+      const m = r.fecha_cob.getMonth();
+      const y = r.fecha_cob.getFullYear();
+      mes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+             'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][m] + ' ' + y;
+    }
+    if(!mes) mes = 'Sin mes';
+    // Normalizar: quitar el año si el mes ya está en MESES (ej: "Mayo 2026" → "Mayo")
+    mes = mes.replace(/\s+\d{4}$/, '').trim();
+    if(!byMes.has(mes)) byMes.set(mes, {total:0, ids:new Set(), clientes:new Map()});
+    const m2 = byMes.get(mes);
+    m2.total += r.monto_cob;
+    if(r.id) m2.ids.add(r.id);
+    const cli = r.cliente || '—';
+    m2.clientes.set(cli, (m2.clientes.get(cli)||0) + r.monto_cob);
+  });
+
+  const meses      = sortMeses([...byMes.keys()].filter(m => m !== 'Sin mes'));
+  if(byMes.has('Sin mes')) meses.push('Sin mes');
+
+  const totalAnual = cobRows.reduce((a,r) => a + r.monto_cob, 0);
+  const totalIds   = new Set(cobRows.map(r=>r.id).filter(Boolean)).size;
+  const maxVal     = Math.max(...meses.map(m => byMes.get(m).total), 1);
+
+  // SVG
+  const W=560, H=180, padL=44, padR=12, padT=30, padB=28;
+  const chartW = W-padL-padR, chartH = H-padT-padB;
+  const n = meses.length || 1;
+  const barW = Math.min(38, chartW/n*0.55);
+  const steps = 4;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;font-family:DM Sans,sans-serif">`;
+  for(let i=0; i<=steps; i++){
+    const y   = padT + chartH - (i/steps)*chartH;
+    const val = (i/steps)*maxVal;
+    svg += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,4"/>`;
+    svg += `<text x="${padL-5}" y="${y+4}" text-anchor="end" font-size="9" fill="#94A3B8">${fmtK(val)}</text>`;
+  }
+  meses.forEach((mes, i) => {
+    const d  = byMes.get(mes);
+    const cx = padL + chartW*(i+0.5)/n;
+    const bh = (d.total/maxVal)*chartH;
+    const y  = padT + chartH - bh;
+    svg += `<rect x="${cx-barW/2}" y="${y}" width="${barW}" height="${bh}" fill="rgba(13,148,136,0.82)" rx="3"/>`;
+    svg += `<text x="${cx}" y="${y-4}" text-anchor="middle" font-size="9" font-weight="600" fill="#0D9488">${fmtK(d.total)}</text>`;
+    svg += `<text x="${cx}" y="${H-6}" text-anchor="middle" font-size="9" fill="#94A3B8">${mes.split(' ')[0].slice(0,3)}</text>`;
+  });
+  svg += '</svg>';
+  document.getElementById('svg-d').innerHTML = svg;
+
+  // Tabla
+  document.getElementById('tbody-d').innerHTML = meses.map(mes => {
+    const d   = byMes.get(mes);
+    const top = [...d.clientes.entries()].sort((a,b) => b[1]-a[1])[0];
+    return `<tr>
+      <td style="font-weight:500">${mes}</td>
+      <td class="r">${d.ids.size}</td>
+      <td class="r" style="color:var(--green);font-weight:600">${fmt(d.total)}</td>
+      <td class="r"><span class="pill pill-teal">${totalAnual>0?(d.total/totalAnual*100).toFixed(1):0}%</span></td>
+      <td class="muted" style="font-size:11px">${top?top[0]:'—'}</td>
+    </tr>`;
+  }).join('') + `
+    <tr class="tbl-total">
+      <td><b>Total</b></td>
+      <td class="r"><b>${totalIds}</b></td>
+      <td class="r" style="color:var(--green)"><b>${fmt(totalAnual)}</b></td>
+      <td class="r">100%</td>
+      <td class="r">—</td>
+    </tr>`;
+}
+
+
+/* ══ E: CICLO COMERCIAL ══ */
+function renderE(){
+  const apr = RAW.filter(r => r.est_ppto === 'Aprobado' && inPeriodo(r.mes_sol));
+  function avgDays(fn){
+    const vals = apr.map(fn).filter(v => v !== null && v >= 0 && v < 1000);
+    return vals.length ? Math.round(vals.reduce((a,b) => a+b, 0) / vals.length) : null;
+  }
+  const d1 = avgDays(r => daysBetween(r.fecha_sol,  r.fecha_ar));   // Solicitud → Aprobación
+  const d2 = avgDays(r => daysBetween(r.fecha_ar,   r.fecha_fact)); // Aprobación → Facturación
+  const d3 = avgDays(r => daysBetween(r.fecha_ar,   r.fecha_cob));  // Aprobación → Cobro
+  // Ciclo Completo = promedio de los 3 pasos anteriores
+  const vals4 = [d1, d2, d3].filter(v => v !== null);
+  const d4 = vals4.length ? Math.round(vals4.reduce((a,b) => a+b, 0) / vals4.length) : null;
+
+  document.getElementById('ciclo-grid').innerHTML = [
+    {v:d1, l:'Solicitud → Aprobación',   u:'días promedio'},
+    {v:d2, l:'Aprobación → Facturación', u:'días promedio'},
+    {v:d3, l:'Aprobación → Cobro',       u:'días promedio'},
+    {v:d4, l:'Ciclo Completo',           u:'promedio de los 3 pasos'},
+  ].map(c => `
+    <div class="ciclo-card">
+      <div class="ciclo-val">${c.v !== null ? c.v : '—'}</div>
+      <div class="ciclo-lbl">${c.l}</div>
+      <div class="ciclo-unit">${c.u}</div>
+    </div>`).join('');
+}
+
+/* ══ F: ESTATUS PPTO ══ */
+function renderF(){
+  const estatuses = ['Aprobado','Rechazado','Por Elaboración','Enviado - Pendiente A. C.','En Revisión Interna','Proceso de Licitación','Pausado'];
+  const colors    = ['#0D9488','#DC2626','#0284C7','#D97706','#7C3AED','#0891B2','#64748B'];
+  const counts    = estatuses.map(e =>
+    new Set(RAW.filter(r => r.est_ppto === e && inPeriodo(r.mes_sol)).map(r => r.id).filter(Boolean)).size
+  );
+  const total = counts.reduce((a,b) => a+b, 0);
+
+  // Dona SVG con tooltip via mouseover
+  const cx=100, cy=100, R=80, r=52;
+  let ang = -Math.PI/2, paths = '';
+  const active = estatuses.map((e,i) => ({e, v:counts[i], color:colors[i]})).filter(x => x.v > 0);
+
+  if(active.length === 1){
+    paths += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${active[0].color}" opacity=".85" stroke="#fff" stroke-width="2"
+      onmouseover="showFTip(event,'${active[0].e}',${active[0].v},${total})"
+      onmouseout="hideFTip()"/>`;
+    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" pointer-events="none"/>`;
+  } else {
+    active.forEach(({e, v, color}) => {
+      const a   = (v/total)*2*Math.PI;
+      const end = ang + a;
+      const x1=cx+R*Math.cos(ang), y1=cy+R*Math.sin(ang);
+      const x2=cx+R*Math.cos(end), y2=cy+R*Math.sin(end);
+      const x3=cx+r*Math.cos(end), y3=cy+r*Math.sin(end);
+      const x4=cx+r*Math.cos(ang), y4=cy+r*Math.sin(ang);
+      const lg = a > Math.PI ? 1 : 0;
+      const eName = e.replace(/'/g,"\'");
+      paths += `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R},0,${lg},1,${x2.toFixed(1)},${y2.toFixed(1)} L${x3.toFixed(1)},${y3.toFixed(1)} A${r},${r},0,${lg},0,${x4.toFixed(1)},${y4.toFixed(1)} Z"
+        fill="${color}" opacity=".85" stroke="#fff" stroke-width="2"
+        onmouseover="showFTip(event,'${eName}',${v},${total})"
+        onmouseout="hideFTip()"
+        style="cursor:pointer;transition:opacity .15s"
+        onmouseenter="this.style.opacity=1"
+        onmouseleave="this.style.opacity=.85"/>`;
+      ang = end;
+    });
+  }
+
+  // Total en el centro
+  paths += `<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="22" font-weight="700" font-family="DM Mono,monospace" fill="#1E293B" pointer-events="none">${total}</text>`;
+  paths += `<text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="DM Sans,sans-serif" pointer-events="none">proyectos</text>`;
+
+  document.getElementById('svg-f').innerHTML = paths;
+
+  // Leyenda lateral
+  document.getElementById('leg-f').innerHTML = estatuses.map((e,i) => counts[i] > 0 ? `
+    <div class="dona-leg-item">
+      <div class="dona-leg-dot" style="background:${colors[i]}"></div>
+      <span>${e} <b style="color:var(--text)">(${counts[i]})</b> · ${total>0?(counts[i]/total*100).toFixed(0):0}%</span>
+    </div>` : '').join('');
+}
+
+function showFTip(evt, nombre, v, total){
+  let tip = document.getElementById('f-tip');
+  if(!tip){
+    tip = document.createElement('div');
+    tip.id = 'f-tip';
+    tip.style.cssText = 'position:fixed;background:#1E293B;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;font-family:DM Sans,sans-serif;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.2);line-height:1.6';
+    document.body.appendChild(tip);
+  }
+  const pct = total > 0 ? (v/total*100).toFixed(1) : 0;
+  tip.innerHTML = `<b>${nombre}</b><br>${v} proyecto${v!==1?'s':''} · ${pct}%`;
+  tip.style.display = 'block';
+  tip.style.left = (evt.clientX + 14) + 'px';
+  tip.style.top  = (evt.clientY - 10) + 'px';
+}
+function hideFTip(){
+  const tip = document.getElementById('f-tip');
+  if(tip) tip.style.display = 'none';
+}
+
+
+/* ══ FILTROS PESTAÑA OPERACIÓN (Departamento / Responsable) ══ */
+// Universo base de la pestaña: proyectos activos (Aprobado · En Curso/Pendiente)
+function opUniverse(){
+  return RAW.filter(r=>r.est_ppto==='Aprobado'&&['En Curso','Pendiente','En Revisión'].includes(r.est_proy));
+}
+// ¿La fila pasa el filtro Departamento/Responsable de la pestaña Operación?
+function opMatchRow(r){
+  const fd=document.getElementById('op-f-depto').value;
+  const fr=document.getElementById('op-f-resp').value;
+  return (!fd||r.depto===fd)&&(!fr||r.responsable===fr);
+}
+// Aplica los filtros de la pestaña Operación a un conjunto de filas
+function opRows(rows){ return rows.filter(opMatchRow); }
+// Poblar Departamento (y en cascada Responsable) con los valores del universo
+function poblarOpFiltros(){
+  const deptos=[...new Set(opUniverse().map(r=>r.depto).filter(Boolean))].sort();
+  const selD=document.getElementById('op-f-depto');
+  const curD=selD.value;
+  selD.innerHTML='<option value="">Todos los departamentos</option>'+
+    deptos.map(d=>`<option value="${d.replace(/"/g,'&quot;')}">${d}</option>`).join('');
+  selD.value=(curD&&deptos.includes(curD))?curD:'';
+  poblarOpResp();
+}
+// Responsable solo con los del departamento elegido (o todos si no hay departamento)
+function poblarOpResp(){
+  const fd=document.getElementById('op-f-depto').value;
+  const base=fd?opUniverse().filter(r=>r.depto===fd):opUniverse();
+  const resps=[...new Set(base.map(r=>r.responsable).filter(Boolean))].sort();
+  const selR=document.getElementById('op-f-resp');
+  const cur=selR.value;
+  selR.innerHTML='<option value="">Todos los responsables</option>'+
+    resps.map(r=>`<option value="${r.replace(/"/g,'&quot;')}">${r}</option>`).join('');
+  selR.value=(cur&&resps.includes(cur))?cur:'';
+}
+function onOpDeptoChange(){ poblarOpResp(); renderOperacion(); }
+function limpiarOpFiltros(){
+  document.getElementById('op-f-depto').value='';
+  poblarOpResp();
+  document.getElementById('op-f-resp').value='';
+  renderOperacion();
+}
+// Re-renderiza solo las tarjetas de la pestaña Operación
+function renderOperacion(){ updateOpClearVisibility(); renderOpStatus(); renderCalendar(); renderLicitacion(); renderAgenda(); renderG(); renderI(); renderDesempenoDepto(); renderDesempenoResp(); }
+
+// El botón "Limpiar filtros" solo se muestra si hay algún filtro activo
+function updateOpClearVisibility(){
+  const fd=document.getElementById('op-f-depto').value;
+  const fr=document.getElementById('op-f-resp').value;
+  const b=document.getElementById('op-clear'); if(b) b.style.display=(fd||fr)?'inline-block':'none';
+}
+
+// Identidad de color por departamento · fija y usada en todo el dashboard
+const DEPTO_COLORS={
+  'Marketing':'#7C3AED',    // morado
+  'Producción':'#CA8A04',   // amarillo
+  'Diseño':'#0EA5E9',       // celeste
+  'Audiovisual':'#2563EB',  // azul
+  'Digital':'#DC2626',      // rojo
+  'Arquitectura':'#16A34A'  // verde
+};
+function deptoColor(d){ return DEPTO_COLORS[(d||'').trim()]||'#64748B'; }
+// Pill de departamento con su color de identidad
+function deptoPill(d){
+  const v=(d||'').trim();
+  if(!v) return '—';
+  if(v==='Varios') return '<span class="pill pill-gray">Varios</span>';
+  const c=deptoColor(v);
+  return `<span class="pill" style="background:${c}22;color:${c}">${v}</span>`;
+}
+
+// Tarjetas por Estatus del Proyecto · cuentan proyectos únicos (cualquier PPTO),
+// respetando el período de solicitud y los filtros Depto/Responsable de la pestaña
+function renderOpStatus(){
+  [['encurso','En Curso'],['pendiente','Pendiente'],['completado','Completado'],['enrevision','En Revisión'],['pausado','Pausado']]
+  .forEach(([id,est])=>{
+    const rows=opRows(RAW.filter(r=>r.est_proy===est&&inSol(r.mes_sol)));
+    const n=new Set(rows.map(r=>(r.id||'').trim()).filter(Boolean)).size;
+    const el=document.getElementById('op-kpi-'+id);
+    if(el) el.textContent=n;
+  });
+  // Proyectos Asignados: cualquier estatus salvo Completado/Cancelado, con Responsable puesto
+  const asignados=opRows(RAW.filter(r=>(r.responsable||'').trim()&&!['Completado','Cancelado'].includes(r.est_proy)&&inSol(r.mes_sol)));
+  const nAsig=new Set(asignados.map(r=>(r.id||'').trim()).filter(Boolean)).size;
+  const elAsig=document.getElementById('op-kpi-asignados');
+  if(elAsig) elAsig.textContent=nAsig;
+}
+
+/* ══ G: CARGA POR DEPARTAMENTO ══ */
+function renderG(){
+  const active=opRows(RAW.filter(r=>
+    ['En Curso','En Revisión'].includes(r.est_proy)&&inSol(r.mes_sol)
+  ));
+  const byDepto=new Map();
+  active.forEach(r=>{ const d=r.depto||'Sin dept.'; if(!byDepto.has(d)) byDepto.set(d,new Set()); byDepto.get(d).add((r.id||'').trim()||r.proyecto); });
+  const sorted=[...byDepto.entries()].map(([d,s])=>[d,s.size]).sort((a,b)=>b[1]-a[1]);
+  const max=Math.max(...sorted.map(r=>r[1]),1);
+  document.getElementById('content-g').innerHTML=sorted.length?sorted.map(([d,v])=>`
+    <div class="prog-wrap">
+      <span class="prog-label"><span class="dot" style="background:${deptoColor(d)}"></span>${d}</span>
+      <div class="prog-bar"><div class="prog-fill" style="width:${(v/max*100).toFixed(0)}%;background:${deptoColor(d)}"></div></div>
+      <span class="prog-val">${v} proyecto${v!==1?'s':''}</span>
+    </div>`).join(''):`<div class="empty">Sin proyectos activos</div>`;
+}
+
+/* ══ CAPACIDAD POR PERSONA (En Curso + En Revisión · sin importar PPTO) ══ */
+function renderI(){
+  const active=opRows(RAW.filter(r=>
+    ['En Curso','En Revisión'].includes(r.est_proy)&&inSol(r.mes_sol)
+  ));
+  const byPerson=new Map();
+  active.forEach(r=>{ const p=r.responsable||'Sin asignar'; if(!byPerson.has(p)) byPerson.set(p,new Set()); byPerson.get(p).add((r.id||'').trim()||r.proyecto); });
+  const sorted=[...byPerson.entries()].map(([p,s])=>[p,s.size]).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('content-i').innerHTML=sorted.length?sorted.map(([p,v])=>{
+    const col=v<=3?'dot-green':v<=6?'dot-amber':'dot-red';
+    const pill=v<=3?'pill-green':v<=6?'pill-amber':'pill-red';
+    return`<div class="prog-wrap">
+      <span class="prog-label"><span class="dot ${col}"></span>${p}</span>
+      <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(v/10*100,100)}%;background:${v<=3?'var(--green)':v<=6?'var(--amber)':'var(--red)'}"></div></div>
+      <span class="pill ${pill}" style="font-size:10px;padding:1px 7px">${v}</span>
+    </div>`;
+  }).join(''):`<div class="empty">Sin proyectos activos</div>`;
+}
+
+/* ══ AGENDA DE PROYECTOS (unifica Prioridades Altas + Fechas Críticas) ══ */
+function renderAgenda(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const base=opRows(RAW.filter(r=>['En Curso','En Revisión'].includes(r.est_proy)&&inSol(r.mes_sol)));
+  // Resumen de vencimiento (sobre el universo completo, antes de filtrar)
+  const agSum=document.getElementById('ag-due-sum'); if(agSum) agSum.innerHTML=dueSummaryHTML(base,false);
+  let rows=base;
+  if(AG_DUE==='porvencer') rows=rows.filter(r=>dueClassOf(r)==='porvencer');
+  else if(AG_DUE==='vencidos') rows=rows.filter(r=>dueClassOf(r)==='vencido');
+  rows=rows.sort((a,b)=>(a.fecha_lim||new Date(9999,0,1))-(b.fecha_lim||new Date(9999,0,1)));
+  document.getElementById('tbody-agenda').innerHTML=rows.length?rows.map(r=>{
+    const dias=r.fecha_lim?daysBetween(today,r.fecha_lim):null;
+    const col=dias===null?'pill-gray':dias<0?'pill-red':dias<=7?'pill-amber':'pill-green';
+    const label=dias===null?'Sin fecha':dias<0?`${Math.abs(dias)}d atraso`:dias===0?'Hoy':dias+'d';
+    return`<tr>
+      <td class="muted">${calPrioFlag(r)} ${r.responsable||'—'}</td>
+      <td>${deptoPill(r.depto)}</td>
+      <td style="font-weight:500;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.proyecto||'—'}</td>
+      <td class="muted">${r.svc_own||'—'}${r.svc_asoc?` · ${r.svc_asoc}`:''}</td>
+      <td class="muted">${r.cliente||'—'}</td>
+      <td><span class="pill ${r.est_proy==='En Revisión'?'pill-purple':'pill-blue'}">${r.est_proy}</span></td>
+      <td class="r muted">${r.fecha_ini?r.fecha_ini.toLocaleDateString('es-MX'):'—'}</td>
+      <td class="r muted">${r.fecha_rev?r.fecha_rev.toLocaleDateString('es-MX'):'—'}</td>
+      <td class="r muted">${r.fecha_lim?r.fecha_lim.toLocaleDateString('es-MX'):'—'}</td>
+      <td><span class="pill ${col}">${label}</span></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="10" class="empty">Sin proyectos En Curso o En Revisión</td></tr>`;
+}
+
+/* ══ PROCESO DE LICITACIÓN ══ */
+function renderLicitacion(){
+  const rows=opRows(RAW.filter(r=>r.est_ppto==='Proceso de Licitación'&&inSol(r.mes_sol)));
+  // Agrupar por ID_Proyecto · cada fila sin ID queda como grupo individual
+  const groups=[]; const byId=new Map();
+  rows.forEach(r=>{
+    const id=(r.id||'').trim();
+    if(!id){ groups.push({rows:[r]}); return; }
+    if(!byId.has(id)){ const g={rows:[]}; byId.set(id,g); groups.push(g); }
+    byId.get(id).rows.push(r);
+  });
+  if(!groups.length){ document.getElementById('tbody-lic').innerHTML=`<tr><td colspan="8" class="empty">Sin proyectos en proceso de licitación</td></tr>`; return; }
+
+  const today=new Date(); today.setHours(0,0,0,0);
+  const pick=(rs,f)=>{ const s=new Set(rs.map(x=>(x[f]||'').trim()).filter(Boolean)); return s.size===0?'—':s.size===1?[...s][0]:'Varios'; };
+  const fDate=d=>d?d.toLocaleDateString('es-MX'):'—';
+  const pickDateStr=(rs,f)=>{ const ts=[...new Set(rs.map(x=>x[f]?x[f].getTime():null).filter(v=>v!==null))]; if(!ts.length)return '—'; if(ts.length>1)return 'Varios'; return new Date(ts[0]).toLocaleDateString('es-MX'); };
+  // Etiqueta de la fecha límite: días a favor (verde) / vence hoy (ámbar) / atrasado (rojo)
+  const limLic=(fl)=>{ if(!fl) return '<td class="r muted">—</td>'; const txt=fl.toLocaleDateString('es-MX'); const d=daysBetween(today,fl); if(d<0) return `<td class="r"><span class="pill pill-red">${txt} · Atrasado ${Math.abs(d)}d</span></td>`; if(d===0) return `<td class="r"><span class="pill pill-amber">${txt} · Vence hoy</span></td>`; return `<td class="r"><span class="pill pill-green">${txt} · ${d}d a favor</span></td>`; };
+  const limLicParent=(rs)=>{ const ts=[...new Set(rs.map(x=>x.fecha_lim?x.fecha_lim.getTime():null).filter(v=>v!==null))]; if(!ts.length)return '<td class="r muted">—</td>'; if(ts.length>1)return '<td class="r muted">Varios</td>'; return limLic(new Date(ts[0])); };
+  // ordenar por fecha límite ascendente (más urgente arriba)
+  groups.sort((a,b)=>Math.min(...a.rows.map(r=>r.fecha_lim?r.fecha_lim.getTime():Infinity))-Math.min(...b.rows.map(r=>r.fecha_lim?r.fecha_lim.getTime():Infinity)));
+
+  let html='';
+  groups.forEach((g,gi)=>{
+    const rs=g.rows, multi=rs.length>1, head=rs[0], key='lic'+gi;
+    html+=`<tr class="grp-parent${multi?' has-children':''}"${multi?` onclick="toggleGroup('${key}')"`:''}>
+      <td style="font-weight:500">${multi?`<span class="grp-arrow" id="arr-${key}">▶</span>`:'<span class="grp-spacer"></span>'}${calPrioFlag(head)} ${head.proyecto||'—'}${multi?` <span class="grp-badge">${rs.length}</span>`:''}</td>
+      <td class="muted">${head.cliente||'—'}</td>
+      <td class="muted">${pick(rs,'svc_own')}</td>
+      <td class="muted">${pick(rs,'responsable')}</td>
+      <td>${deptoPill(pick(rs,'depto'))}</td>
+      <td class="r muted">${pickDateStr(rs,'fecha_rev')}</td>
+      <td class="r muted">${pickDateStr(rs,'fecha_ent')}</td>
+      ${limLicParent(rs)}
+    </tr>`;
+    if(multi){
+      rs.forEach(r=>{
+        html+=`<tr class="grp-child child-${key}" style="display:none">
+          <td class="muted" style="padding-left:30px">${calPrioFlag(r)} ${r.proyecto||'—'}</td>
+          <td class="muted">${r.cliente||'—'}</td>
+          <td class="muted">${r.svc_own||'—'}${r.svc_asoc?` · ${r.svc_asoc}`:''}</td>
+          <td class="muted">${r.responsable||'—'}</td>
+          <td>${deptoPill(r.depto)}</td>
+          <td class="r muted">${fDate(r.fecha_rev)}</td>
+          <td class="r muted">${fDate(r.fecha_ent)}</td>
+          ${limLic(r.fecha_lim)}
+        </tr>`;
+      });
+    }
+  });
+  document.getElementById('tbody-lic').innerHTML=html;
+}
+
+/* ══ CALENDARIO DE GESTIÓN (Lun–Vie · por Fecha de Revisión) ══ */
+let CAL_OFFSET=0, CAL_MODE='ambos';
+function calWeek(delta, reset){ if(reset) CAL_OFFSET=0; else CAL_OFFSET+=delta; renderCalendar(); }
+function calMode(m){ CAL_MODE=m; renderCalendar(); }
+function mondayOf(date){ const t=new Date(date); t.setHours(0,0,0,0); const day=t.getDay(); t.setDate(t.getDate()-(day===0?6:day-1)); return t; }
+function sameDay(a,b){ return !!a&&!!b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+
+// Estado del deadline (UN solo indicador de color por tarjeta) → {cls, text}
+let CAL_CARDS=[];
+function calCardState(r){
+  const today=new Date(); today.setHours(0,0,0,0);
+  if(r.est_proy==='Cancelado') return {cls:'st-grey', text:'Cancelado'};
+  if(r.est_proy==='Completado'){
+    if(r.fecha_lim&&r.fecha_ent){
+      if(r.fecha_ent>r.fecha_lim) return {cls:'st-amber', text:`Entregado tarde ${daysBetween(r.fecha_lim,r.fecha_ent)}d`};
+      if(r.fecha_ent<r.fecha_lim) return {cls:'st-green', text:`Anticipado ${daysBetween(r.fecha_ent,r.fecha_lim)}d`};
+      return {cls:'st-green', text:'Entregado a tiempo'};
+    }
+    return {cls:'st-green', text:'Completado'};
+  }
+  if(!r.fecha_lim) return {cls:'st-grey', text:'En curso'};
+  const dias=daysBetween(today,r.fecha_lim);
+  if(dias<0) return {cls:'st-red', text:`Vencido hace ${Math.abs(dias)}d`};
+  if(dias<=DUE_DAYS) return {cls:'st-amber', text: dias===0?'Vence hoy':`Vence en ${dias}d`};
+  return {cls:'st-grey', text:`Vence en ${dias}d`};
+}
+// Prioridad como bandera (no pill de texto)
+function calPrioFlag(r){
+  const p=(r.prioridad||'').trim().toLowerCase();
+  if(!p) return '';
+  const cls=p==='alta'?'pf-alta':p==='media'?'pf-media':'pf-baja';
+  return `<span class="cal-flag ${cls}" title="Prioridad ${r.prioridad}">⚑</span>`;
+}
+// Detalle de la tarjeta (al hacer clic): todas las fechas + descripción
+function openCalDetail(idx){
+  const e=CAL_CARDS[idx]; if(!e) return; const r=e.r;
+  const fD=d=>d?d.toLocaleDateString('es-MX'):'—';
+  const st=calCardState(r);
+  const tipo=e.type==='ent'?'Entrega':e.type==='both'?'Revisión + Entrega':'Revisión';
+  document.getElementById('cal-detail-body').innerHTML=`
+    <div class="cd-evtype">${tipo}</div>
+    <div class="cd-title">${r.proyecto||r.cliente||'—'}</div>
+    <div class="cd-sub">${r.cliente||'—'}${r.svc_own?' · '+r.svc_own+(r.svc_asoc?' · '+r.svc_asoc:''):''}</div>
+    <div class="cal-state ${st.cls}" style="margin:12px 0;display:inline-block">${st.text}</div>
+    <div class="cd-grid">
+      <div><span class="cd-k">Departamento</span><span>${deptoPill(r.depto)}</span></div>
+      <div><span class="cd-k">Responsable</span><span>${r.responsable||'—'}</span></div>
+      <div><span class="cd-k">Prioridad</span><span>${r.prioridad||'—'}</span></div>
+      <div><span class="cd-k">Estatus</span><span>${r.est_proy||'—'}</span></div>
+      <div><span class="cd-k">Fecha de Inicio</span><span>${fD(r.fecha_ini)}</span></div>
+      <div><span class="cd-k">Fecha de Revisión</span><span>${fD(r.fecha_rev)}</span></div>
+      <div><span class="cd-k">Fecha de Entrega</span><span>${fD(r.fecha_ent)}</span></div>
+      <div><span class="cd-k">Fecha Límite</span><span>${fD(r.fecha_lim)}</span></div>
+    </div>
+    ${r.descripcion?`<div class="cd-desc"><span class="cd-k">Descripción</span><p>${(r.descripcion||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p></div>`:''}`;
+  document.getElementById('cal-detail-ov').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeCalDetail(){ document.getElementById('cal-detail-ov').classList.remove('on'); document.body.style.overflow=''; }
+
+function renderCalendar(){
+  const base=mondayOf(new Date()); base.setDate(base.getDate()+CAL_OFFSET*7);
+  const today=new Date(); today.setHours(0,0,0,0);
+  const days=[]; for(let i=0;i<5;i++){ const d=new Date(base); d.setDate(base.getDate()+i); days.push(d); }
+  const fmtR=d=>d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'});
+  const rangeEl=document.getElementById('op-cal-range'); if(rangeEl) rangeEl.textContent=`${fmtR(days[0])} – ${fmtR(days[4])}`;
+  document.querySelectorAll('.cal-mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===CAL_MODE));
+
+  const showRev=CAL_MODE!=='entrega', showEnt=CAL_MODE!=='revision';
+  const dueOk=r=> CAL_DUE==='todos' ? true : CAL_DUE==='vencidos' ? dueClassOf(r)==='vencido' : dueClassOf(r)==='porvencer';
+  const poolRev=showRev?opRows(RAW.filter(r=>r.fecha_rev)).filter(dueOk):[];
+  const poolEnt=showEnt?opRows(RAW.filter(r=>r.fecha_ent)).filter(dueOk):[];
+  const nombres=['Lunes','Martes','Miércoles','Jueves','Viernes'];
+  const deptosWeek=new Set();
+  const fD=d=>d?d.toLocaleDateString('es-MX'):'—';
+
+  CAL_CARDS=[];
+  // Tarjeta minimalista: tipo (sutil) · prioridad (bandera) · título · cliente · estado del deadline
+  const chip=(r,type)=>{
+    if(r.depto) deptosWeek.add(r.depto);
+    const idx=CAL_CARDS.push({r,type})-1;
+    const st=calCardState(r);
+    const tipo=type==='ent'?'Entrega':type==='both'?'Rev.+Entrega':'Revisión';
+    return `<div class="cal-chip" style="border-left-color:${deptoColor(r.depto)}" onclick="openCalDetail(${idx})" title="Ver detalle del proyecto">
+      <div class="cal-chip-top"><span class="cal-evtype">${tipo}</span>${calPrioFlag(r)}</div>
+      <div class="cal-chip-t">${r.proyecto||r.svc_own||r.cliente||'—'}</div>
+      <div class="cal-chip-s">${r.cliente||''}${r.responsable?' · '+r.responsable:''}</div>
+      ${r.svc_asoc?`<div class="cal-chip-svc">${r.svc_asoc}</div>`:''}
+      <div class="cal-state ${st.cls}">${st.text}</div>
+      ${r.descripcion?`<button class="cal-desc-btn" onclick="event.stopPropagation();this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Descripción <span class="cal-desc-arr">▾</span></button><div class="cal-desc">${(r.descripcion||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+    </div>`;
+  };
+  // Misma fila lógica (proyecto + servicio) revisada y entregada el mismo día → una sola tarjeta
+  const keyOf=r=>(r.id||'').trim()+'|'+(r.svc_own||'')+'|'+(r.svc_asoc||'');
+
+  let html='<div class="cal-grid">';
+  days.forEach((d,i)=>{
+    const isToday=sameDay(d,today);
+    const revRows=showRev?poolRev.filter(r=>sameDay(r.fecha_rev,d)):[];
+    const entRows=showEnt?poolEnt.filter(r=>sameDay(r.fecha_ent,d)):[];
+    const entByKey=new Map(); entRows.forEach(r=>entByKey.set(keyOf(r),r));
+    const usedEnt=new Set();
+    const evs=[];
+    revRows.forEach(r=>{ const k=keyOf(r); if(showEnt&&entByKey.has(k)){ evs.push([entByKey.get(k),'both']); usedEnt.add(k); } else evs.push([r,'rev']); });
+    entRows.forEach(r=>{ if(!usedEnt.has(keyOf(r))) evs.push([r,'ent']); });
+    html+=`<div class="cal-day${isToday?' cal-today-col':''}">
+      <div class="cal-day-hdr"><span>${nombres[i]}</span><span class="cal-day-num">${d.getDate()}</span></div>
+      <div class="cal-day-body">${evs.length?evs.map(([r,t])=>chip(r,t)).join(''):'<div class="cal-empty">—</div>'}</div>
+    </div>`;
+  });
+  html+='</div>';
+  // Contadores de la semana (proyectos únicos por estado de vencimiento) para las pestañas
+  const inWeek=d=>d&&d>=days[0]&&d<=days[4];
+  const wkRows=[];
+  if(showRev) opRows(RAW.filter(r=>r.fecha_rev&&inWeek(r.fecha_rev))).forEach(r=>wkRows.push(r));
+  if(showEnt) opRows(RAW.filter(r=>r.fecha_ent&&inWeek(r.fecha_ent))).forEach(r=>wkRows.push(r));
+  const dmW=dueMap(wkRows); let cPV=0,cVenc=0; dmW.forEach(c=>{ if(c==='vencido')cVenc++; else if(c==='porvencer')cPV++; });
+  const setCnt=(id,n)=>{ const e=document.getElementById(id); if(e) e.textContent=n; };
+  setCnt('due-cnt-todos',dmW.size); setCnt('due-cnt-porvencer',cPV); setCnt('due-cnt-vencidos',cVenc);
+  const vChip=document.querySelector('#cal-due-row .due-chip[data-due="vencidos"]'); if(vChip) vChip.classList.toggle('has-alert',cVenc>0);
+  const legend=[...deptosWeek].sort();
+  if(legend.length) html+=`<div class="cal-legend">${legend.map(dp=>`<span class="cal-leg-item"><span class="cal-leg-dot" style="background:${deptoColor(dp)}"></span>${dp}</span>`).join('')}</div>`;
+  const el=document.getElementById('op-cal'); if(el) el.innerHTML=html;
+}
+
+/* ══ DESEMPEÑO (por Responsable / por Departamento) ══ */
+function desempenoBy(field){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const rows=opRows(RAW.filter(r=>inSol(r.mes_sol)));
+  const map=new Map();
+  rows.forEach(r=>{
+    const k=(r[field]||'Sin asignar').trim()||'Sin asignar';
+    if(!map.has(k)) map.set(k,{enCurso:new Set(),enRev:new Set(),pend:new Set(),paus:new Set(),comp:new Set(),atras:new Set(),onTime:0,onTotal:0});
+    // Unidad = involucramiento proyecto×departamento: así el trabajo sin responsable
+    // se acumula en "Sin asignar" y los totales de ambas tablas coinciden.
+    const d=map.get(k); const id=((r.id||'').trim()||r.proyecto||('_'+Math.random()))+'|'+(r.depto||'').trim();
+    if(r.est_proy==='En Curso') d.enCurso.add(id);
+    else if(r.est_proy==='En Revisión') d.enRev.add(id);
+    else if(r.est_proy==='Pendiente') d.pend.add(id);
+    else if(r.est_proy==='Pausado') d.paus.add(id);
+    else if(r.est_proy==='Completado'){ d.comp.add(id); if(r.fecha_ent&&r.fecha_lim){ d.onTotal++; if(r.fecha_ent<=r.fecha_lim) d.onTime++; } }
+    if(['En Curso','En Revisión'].includes(r.est_proy)&&r.fecha_lim&&r.fecha_lim<today) d.atras.add(id);
+  });
+  const list=[...map.entries()].map(([k,d])=>({
+    k, enCurso:d.enCurso.size, enRev:d.enRev.size, pend:d.pend.size, paus:d.paus.size, comp:d.comp.size, atras:d.atras.size,
+    pct: d.onTotal>0?Math.round(d.onTime/d.onTotal*100):null
+  })).sort((a,b)=> a.k==='Sin asignar' ? 1 : b.k==='Sin asignar' ? -1 : a.k.localeCompare(b.k,'es'));
+  // Total = suma de la carga de cada área (cada depto/responsable cuenta su propio
+  // trabajo). Un proyecto que involucra a varias áreas cuenta en cada una, por eso el
+  // total por Departamento y por Responsable pueden diferir: es correcto y esperado.
+  let gOn=0,gTot=0; map.forEach(d=>{ gOn+=d.onTime; gTot+=d.onTotal; });
+  const totals={
+    enCurso:list.reduce((a,r)=>a+r.enCurso,0), enRev:list.reduce((a,r)=>a+r.enRev,0),
+    pend:list.reduce((a,r)=>a+r.pend,0), paus:list.reduce((a,r)=>a+r.paus,0), comp:list.reduce((a,r)=>a+r.comp,0),
+    atras:list.reduce((a,r)=>a+r.atras,0), pct: gTot>0?Math.round(gOn/gTot*100):null
+  };
+  return {list, totals};
+}
+function pctPill(p){ const c=p===null?'pill-gray':p>=80?'pill-green':p>=50?'pill-amber':'pill-red'; return `<span class="pill ${c}">${p===null?'—':p+'%'}</span>`; }
+function desempenoRow(r, isDepto){
+  return`<tr>
+    <td style="font-weight:500">${isDepto?deptoPill(r.k):r.k}</td>
+    <td class="r" style="color:var(--blue)">${r.enCurso}</td>
+    <td class="r" style="color:var(--purple)">${r.enRev}</td>
+    <td class="r muted">${r.pend}</td>
+    <td class="r muted">${r.paus}</td>
+    <td class="r" style="color:var(--green)">${r.comp}</td>
+    <td class="r" style="color:var(--red)">${r.atras}</td>
+    <td class="r">${pctPill(r.pct)}</td>
+  </tr>`;
+}
+function desempenoTotalRow(t){
+  return`<tr class="tbl-total">
+    <td><b>Total</b></td>
+    <td class="r">${t.enCurso}</td>
+    <td class="r">${t.enRev}</td>
+    <td class="r">${t.pend}</td>
+    <td class="r">${t.paus}</td>
+    <td class="r">${t.comp}</td>
+    <td class="r">${t.atras}</td>
+    <td class="r">${pctPill(t.pct)}</td>
+  </tr>`;
+}
+function renderDesempenoResp(){
+  const {list,totals}=desempenoBy('responsable');
+  document.getElementById('tbody-desp-resp').innerHTML=list.length?list.map(r=>desempenoRow(r,false)).join('')+desempenoTotalRow(totals):`<tr><td colspan="8" class="empty">Sin datos</td></tr>`;
+}
+function renderDesempenoDepto(){
+  const {list,totals}=desempenoBy('depto');
+  document.getElementById('tbody-desp-depto').innerHTML=list.length?list.map(r=>desempenoRow(r,true)).join('')+desempenoTotalRow(totals):`<tr><td colspan="8" class="empty">Sin datos</td></tr>`;
+}
+
+/* ══ J: TOP 10 MARCAS YTD ══ */
+function renderJ(){
+  const apr=RAW.filter(r=>r.est_ppto==='Aprobado'&&inPeriodo(r.mes_sol));
+  const byCliente=new Map();
+  apr.forEach(r=>{
+    const c=r.cliente||'—';
+    byCliente.set(c,(byCliente.get(c)||0)+r.monto_ppto);
+  });
+  const sorted=[...byCliente.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const max=sorted[0]?sorted[0][1]:1;
+
+  document.getElementById('content-j').innerHTML=sorted.map(([c,v],i)=>`
+    <div class="prog-wrap">
+      <span class="prog-label" style="font-weight:${i<3?600:400}">${i+1}. ${c}</span>
+      <div class="prog-bar"><div class="prog-fill" style="width:${(v/max*100).toFixed(0)}%;background:var(--teal)"></div></div>
+      <span class="prog-val">${fmt(v)}</span>
+    </div>`).join('');
+}
+
+/* ══ K: RECHAZOS POR SERVICIO ══ */
+function renderK(){
+  const rech=RAW.filter(r=>r.est_ppto==='Rechazado'&&inPeriodo(r.mes_sol));
+  const bySvc=new Map();
+  rech.forEach(r=>{
+    const s=r.svc_own||'Sin servicio';
+    if(!bySvc.has(s)) bySvc.set(s,{count:0,monto:0});
+    const d=bySvc.get(s); d.count++; d.monto+=r.monto_ppto;
+  });
+  const sorted=[...bySvc.entries()].sort((a,b)=>b[1].monto-a[1].monto);
+  document.getElementById('tbody-k').innerHTML=sorted.length?sorted.map(([s,d])=>`
+    <tr>
+      <td style="font-weight:500">${s}</td>
+      <td class="r"><span class="pill pill-red">${d.count}</span></td>
+      <td class="r" style="color:var(--red)">${fmt(d.monto)}</td>
+      <td class="r muted">${fmt(d.count?d.monto/d.count:0)}</td>
+    </tr>`).join(''):`<tr><td colspan="4" class="empty">Sin rechazos en el período</td></tr>`;
+}
+
+/* ══ L: PRICING COMPARATIVO ══ */
+function renderL(){
+  const apr=RAW.filter(r=>r.est_ppto==='Aprobado'&&inPeriodo(r.mes_sol));
+  const bySvc=new Map();
+  apr.forEach(r=>{
+    const s=r.svc_own||'Sin servicio';
+    if(!bySvc.has(s)) bySvc.set(s,[]);
+    bySvc.get(s).push(r.monto_ppto);
+  });
+  const sorted=[...bySvc.entries()]
+    .filter(([,v])=>v.length>0)
+    .map(([s,vals])=>{
+      const min=Math.min(...vals),max=Math.max(...vals);
+      const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const ratio=min>0?max/min:0;
+      return{s,n:vals.length,avg,min,max,rango:max-min,ratio};
+    }).sort((a,b)=>b.avg-a.avg);
+
+  document.getElementById('tbody-l').innerHTML=sorted.length?sorted.map(r=>`
+    <tr>
+      <td style="font-weight:500">${r.s}</td>
+      <td class="r">${r.n}</td>
+      <td class="r">${fmt(r.avg)}</td>
+      <td class="r muted">${fmt(r.min)}</td>
+      <td class="r muted">${fmt(r.max)}</td>
+      <td class="r">${fmt(r.rango)}</td>
+      <td>${r.ratio>5?'🔴':'✅'}</td>
+    </tr>`).join(''):`<tr><td colspan="8" class="empty">Sin datos</td></tr>`;
+}
+
+/* ══ M: RANKING VENDEDORES ══ */
+function renderM(){
+  const bySeller=new Map();
+  RAW.filter(r=>inPeriodo(r.mes_sol)).forEach(r=>{
+    const s=r.canal_int||'Sin ejecutivo';
+    if(!bySeller.has(s)) bySeller.set(s,{leads:new Set(),apr:new Set(),rech:new Set(),monto:0});
+    const d=bySeller.get(s);
+    if(r.id) d.leads.add(r.id);
+    if(r.est_ppto==='Aprobado'&&r.id){ d.apr.add(r.id); d.monto+=r.monto_ppto; }
+    if(r.est_ppto==='Rechazado'&&r.id) d.rech.add(r.id);
+  });
+  const sorted=[...bySeller.entries()]
+    .map(([s,d])=>({
+      s,
+      leads:d.leads.size,
+      apr:d.apr.size,
+      rech:d.rech.size,
+      tasa:d.apr.size+d.rech.size>0?((d.apr.size/(d.apr.size+d.rech.size))*100).toFixed(0)+'%':'—',
+      monto:d.monto
+    })).sort((a,b)=>b.monto-a.monto);
+
+  document.getElementById('tbody-m').innerHTML=sorted.length?sorted.map(r=>`
+    <tr>
+      <td style="font-weight:500">${r.s}</td>
+      <td class="r">${r.leads}</td>
+      <td class="r" style="color:var(--green)">${r.apr}</td>
+      <td class="r" style="color:var(--red)">${r.rech}</td>
+      <td class="r"><span class="pill ${parseFloat(r.tasa)>=60?'pill-green':parseFloat(r.tasa)>=40?'pill-amber':'pill-red'}">${r.tasa}</span></td>
+      <td class="r" style="color:var(--teal);font-weight:600">${fmt(r.monto)}</td>
+    </tr>`).join(''):`<tr><td colspan="6" class="empty">Sin datos</td></tr>`;
+}
+
+
+loadData();
+setInterval(loadData,5*60*1000);
+
+/* ══ K: ANÁLISIS DE RECHAZOS POR SERVICIO ══ */
+function renderK(){
+  const rech = RAW.filter(r => r.est_ppto === 'Rechazado' && inPeriodo(r.mes_sol));
+  const bySvc = new Map();
+  rech.forEach(r => {
+    const s = r.svc_own || 'Sin servicio';
+    if(!bySvc.has(s)) bySvc.set(s, {ids: new Set(), monto: 0});
+    const d = bySvc.get(s);
+    if(r.id) d.ids.add(r.id);
+    d.monto += r.monto_ppto;
+  });
+
+  // Top 10 ordenado por # rechazos
+  const sorted = [...bySvc.entries()]
+    .map(([s,d]) => ({s, n: d.ids.size, monto: d.monto}))
+    .sort((a,b) => b.n - a.n)
+    .slice(0, 10);
+
+  const totalN     = sorted.reduce((a,r) => a + r.n,     0);
+  const totalMonto = sorted.reduce((a,r) => a + r.monto, 0);
+
+  document.getElementById('tbody-k').innerHTML = sorted.length
+    ? sorted.map((r,i) => `
+    <tr>
+      <td><span class="pill pill-gray" style="margin-right:6px">${i+1}</span>${r.s}</td>
+      <td class="r"><span class="pill pill-red">${r.n}</span></td>
+      <td class="r" style="color:var(--red)">${fmt(r.monto)}</td>
+      <td class="r muted">${fmt(r.n ? r.monto/r.n : 0)}</td>
+    </tr>`).join('') + `
+    <tr class="tbl-total">
+      <td><b>Total</b></td>
+      <td class="r"><b>${totalN}</b></td>
+      <td class="r" style="color:var(--red)"><b>${fmt(totalMonto)}</b></td>
+      <td class="r">—</td>
+    </tr>`
+    : `<tr><td colspan="4" class="empty">Sin rechazos</td></tr>`;
+}
+
+/* ══ N: TOP 10 SERVICIOS MÁS VENDIDOS ══ */
+function renderN(){
+  const apr = RAW.filter(r => r.est_ppto === 'Aprobado' && inPeriodo(r.mes_sol));
+  const bySvc = new Map();
+  apr.forEach(r => {
+    const s = r.svc_own || 'Sin servicio';
+    if(!bySvc.has(s)) bySvc.set(s, {ids: new Set(), monto: 0});
+    const d = bySvc.get(s);
+    if(r.id) d.ids.add(r.id);
+    d.monto += r.monto_ppto;
+  });
+
+  // Top 10 ordenado por # ventas
+  const sorted = [...bySvc.entries()]
+    .map(([s,d]) => ({s, n: d.ids.size, monto: d.monto}))
+    .sort((a,b) => b.n - a.n)
+    .slice(0, 10);
+
+  const totalN     = sorted.reduce((a,r) => a + r.n,     0);
+  const totalMonto = sorted.reduce((a,r) => a + r.monto, 0);
+
+  document.getElementById('tbody-n').innerHTML = sorted.length
+    ? sorted.map((r,i) => `
+    <tr>
+      <td><span class="pill pill-gray" style="margin-right:6px">${i+1}</span>${r.s}</td>
+      <td class="r"><span class="pill pill-green">${r.n}</span></td>
+      <td class="r" style="color:var(--green)">${fmt(r.monto)}</td>
+      <td class="r muted">${fmt(r.n ? r.monto/r.n : 0)}</td>
+    </tr>`).join('') + `
+    <tr class="tbl-total">
+      <td><b>Total</b></td>
+      <td class="r"><b>${totalN}</b></td>
+      <td class="r" style="color:var(--green)"><b>${fmt(totalMonto)}</b></td>
+      <td class="r">—</td>
+    </tr>`
+    : `<tr><td colspan="4" class="empty">Sin ventas</td></tr>`;
+}
+
+/* ══ L: PRICING COMPARATIVO POR SERVICIO ══ */
+function renderL(){
+  const apr = RAW.filter(r => r.est_ppto === 'Aprobado' && inPeriodo(r.mes_sol));
+
+  // Agrupar por Servicio Owner → dentro de cada servicio agrupar por ID_Proyecto
+  const bySvc = new Map();
+  apr.forEach(r => {
+    const s = r.svc_own || 'Sin servicio';
+    if(!bySvc.has(s)) bySvc.set(s, new Map()); // id -> monto
+    const idMap = bySvc.get(s);
+    const id = (r.id || '').trim();
+    if(id) idMap.set(id, (idMap.get(id) || 0) + r.monto_ppto + (r.dif_camb||0));
+  });
+
+  const sorted = [...bySvc.entries()]
+    .map(([s, idMap]) => {
+      const montos = [...idMap.values()];
+      const n      = montos.length;
+      if(!n) return null;
+      const avg    = montos.reduce((a,b) => a+b, 0) / n;
+      const min    = Math.min(...montos);
+      const max    = Math.max(...montos);
+      const rango  = max - min;
+      const ratio  = min > 0 ? max/min : 0;
+      return { s, n, avg, min, max, rango, ratio };
+    })
+    .filter(Boolean)
+    .sort((a,b) => b.avg - a.avg);
+
+  // Etiqueta de consistencia: muestra el múltiplo real, no solo un semáforo
+  const consistenciaHTML = r => {
+    if(r.min===0 && r.max>0) return `<span class="pill pill-red" title="El proyecto más barato de este servicio se cobró en $0">🔴 Mín. es $0</span>`;
+    return r.ratio > 5
+      ? `<span class="pill pill-red" title="El más caro costó ${r.ratio.toFixed(1)} veces más que el más barato">🔴 ${r.ratio.toFixed(1)}x más caro</span>`
+      : `<span class="pill pill-green" title="El más caro costó ${r.ratio.toFixed(1)} veces el más barato">✅ ${r.ratio.toFixed(1)}x</span>`;
+  };
+
+  document.getElementById('tbody-l').innerHTML = sorted.length
+    ? sorted.map(r => `
+    <tr>
+      <td style="font-weight:500">${r.s}</td>
+      <td class="r">${r.n}</td>
+      <td class="r">${fmt(r.avg)}</td>
+      <td class="r muted">${fmt(r.min)}</td>
+      <td class="r muted">${fmt(r.max)}</td>
+      <td class="r">${fmt(r.rango)}</td>
+      <td>${consistenciaHTML(r)}</td>
+    </tr>`).join('')
+    : `<tr><td colspan="8" class="empty">Sin datos</td></tr>`;
+}
+
+/* ══ TABS ══ */
+const MOD_HASH={resumen:'comercial',cobranza:'administrativo',operacion:'operativo'};
+function switchTab(name){
+  document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));
+  document.body.dataset.mod=name;
+  if(MOD_HASH[name]&&location.hash!=='#'+MOD_HASH[name]) history.replaceState(null,'','#'+MOD_HASH[name]);
+}
+(function(){const inv={comercial:'resumen',administrativo:'cobranza',operativo:'operacion'};
+  const go=()=>switchTab(inv[(location.hash||'').slice(1)]||'resumen');
+  window.addEventListener('hashchange',go);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
+
+/* ══ VENTANA NEW LEADS ══
+   Lunes   → semana ANTERIOR completa (lun pasado 00:00 → dom pasado 23:59)
+   Mar-Dom → semana EN CURSO (lunes de esta semana 00:00 → ahora)
+   Así los lunes se ve el acumulado cerrado de la semana previa,
+   y a partir del martes empieza a contar la semana en curso. */
+function leadsWindow(){
+  const t=new Date(); t.setHours(0,0,0,0);
+  const day=t.getDay();                    // 0=Dom,1=Lun,...6=Sáb
+  if(day===1){                             // Lunes → semana anterior
+    const start=new Date(t); start.setDate(t.getDate()-7);                              // lunes anterior
+    const end=new Date(t);   end.setDate(t.getDate()-1); end.setHours(23,59,59,999);    // domingo anterior
+    return {start, end, prevWeek:true};
+  }
+  const diff=(day===0?6:day-1);            // días desde el lunes de esta semana
+  const start=new Date(t); start.setDate(t.getDate()-diff);
+  const end=new Date(); end.setHours(23,59,59,999);
+  return {start, end, prevWeek:false};
+}
+
+/* ¿El código de esta fila califica como New Lead dentro de la ventana?
+   Regla: cuenta si es la PRIMERA aparición del código (no tiene filas con
+   Fecha de Solicitud anterior al inicio de la ventana). Excepción: aunque sea
+   una renovación (mismo código que ya existía, ej. Gestión de Redes mensual),
+   SÍ cuenta si su presupuesto del período está "Por Elaboración". */
+function leadQualifies(id, lw){
+  id=(id||'').trim();
+  if(!id) return true;                                  // sin código → fila individual, cuenta
+  const esRenovacion = RAW.some(r=>(r.id||'').trim()===id && r.fecha_sol && r.fecha_sol < lw.start);
+  if(!esRenovacion) return true;                        // primera aparición → cuenta
+  // renovación → solo cuenta si en la ventana hay un presupuesto "Por Elaboración"
+  return RAW.some(r=>(r.id||'').trim()===id && r.fecha_sol &&
+    r.fecha_sol>=lw.start && r.fecha_sol<=lw.end && r.est_ppto==='Por Elaboración');
+}
+
+/* ══ DETALLE DE TARJETAS (MODAL) ══ */
+const KPI_DETAIL = {
+  ventas:      {title:'Ventas - Facturado',    sub:'Proyectos con presupuesto Aprobado (sin pausados) · por Mes A/R de PPTO',  filter:r=>r.est_ppto==='Aprobado'&&inPeriodo(r.mes_ar)&&!RAW.some(x=>x.est_ppto==='Pausado'&&(x.id||'').trim()===(r.id||'').trim())},
+  cobrado:     {title:'Cobrado',               sub:'Aprobados con monto cobrado',                        filter:r=>r.est_ppto==='Aprobado'&&r.monto_cob>0&&inSol(r.mes_sol)},
+  porcobrar:   {title:'Por Cobrar',            sub:'Aprobados con saldo pendiente de cobro',             filter:r=>r.est_ppto==='Aprobado'&&inPeriodo(r.mes_sol)&&(r.monto_ppto+(r.dif_camb||0))-r.monto_cob>0.01},
+  porfacturar: {title:'Proyectos Pendientes por Aprobación', sub:'Enviado al cliente · Pendiente A. C.',                          filter:r=>r.est_ppto==='Enviado - Pendiente A. C.'&&inPeriodo(r.mes_sol)},
+  cotizacion:  {title:'En Cotización',         sub:'Por Elaboración + En Revisión Interna + Proceso de Licitación', filter:r=>['Por Elaboración','En Revisión Interna','Proceso de Licitación'].includes(r.est_ppto)&&inPeriodo(r.mes_sol)},
+  rechazados:  {title:'Proyectos Rechazados',  sub:'Presupuestos rechazados',                            filter:r=>r.est_ppto==='Rechazado'&&inPeriodo(r.mes_sol)},
+  tasa:        {title:'Tasa de Cierre',        sub:'Aprobados + Rechazados (base del cálculo)',          filter:r=>['Aprobado','Rechazado'].includes(r.est_ppto)&&inPeriodo(r.mes_sol)},
+  newleads:    {title:'New Leads - Requirements', sub:'Proyectos nuevos (excluye renovaciones, salvo Por Elaboración) · lunes: semana anterior', weekly:true, dedupe:true, filter:r=>{const lw=leadsWindow(); return r.fecha_sol&&r.fecha_sol>=lw.start&&r.fecha_sol<=lw.end&&leadQualifies(r.id,lw);}},
+  pausados:    {title:'Proyectos Pausados',  sub:'Estatus de PPTO: Pausado (atípicos)', layout:'pausado', filter:r=>r.est_ppto==='Pausado'&&inPeriodo(r.mes_sol)},
+  // ── Operación · por Estatus del Proyecto (cualquier PPTO + Período + filtros Depto/Resp) ──
+  proy_encurso:    {title:'Proyectos en Curso',     sub:'Estatus del Proyecto: En Curso',    pField:'responsable', filter:r=>r.est_proy==='En Curso'   &&inPeriodo(r.mes_sol)&&opMatchRow(r)},
+  proy_pendiente:  {title:'Proyectos Pendientes',   sub:'Estatus del Proyecto: Pendiente',   pField:'responsable', filter:r=>r.est_proy==='Pendiente'  &&inPeriodo(r.mes_sol)&&opMatchRow(r)},
+  proy_completado: {title:'Proyectos Completados',  sub:'Estatus del Proyecto: Completado',  pField:'responsable', filter:r=>r.est_proy==='Completado' &&inPeriodo(r.mes_sol)&&opMatchRow(r)},
+  proy_enrevision: {title:'Proyectos en Revisión',  sub:'Estatus del Proyecto: En Revisión', pField:'responsable', filter:r=>r.est_proy==='En Revisión'&&inPeriodo(r.mes_sol)&&opMatchRow(r)},
+  proy_pausado:    {title:'Proyectos Pausados',     sub:'Estatus del Proyecto: Pausado',     pField:'responsable', filter:r=>r.est_proy==='Pausado'    &&inPeriodo(r.mes_sol)&&opMatchRow(r)},
+  proy_asignados:  {title:'Proyectos Asignados',     sub:'Excluye Completados y Cancelados · con Responsable asignado', pField:'responsable', showEstatus:true, filter:r=>(r.responsable||'').trim()&&!['Completado','Cancelado'].includes(r.est_proy)&&inPeriodo(r.mes_sol)&&opMatchRow(r)},
+};
+
+let MODAL_ROWS = [];
+let MODAL_KEY = '';
+// Campo del 2º filtro del modal según la tarjeta: 'canal_int' (Responsable de Cuentas,
+// tarjetas de arriba) o 'responsable' (Responsable, tarjetas de Operación)
+let MODAL_PFIELD='canal_int', MODAL_PLABEL='Todos los responsables de cuentas';
+// El modal de Operación añade columnas de fechas (Revisión/Entrega/Límite)
+let MODAL_ISOP=false, MODAL_SHOWDUE=false, MODAL_LAYOUT='base', MODAL_SHOWESTATUS=false;
+// Filtro de vencimiento: 'todos' | 'porvencer' | 'vencidos' · umbral de días compartido
+let MODAL_DUE='todos', AG_DUE='todos', CAL_DUE='todos', DUE_DAYS=7;
+function isActiveProy(r){ return !['Completado','Cancelado'].includes(r.est_proy); }
+// Clasifica un proyecto activo según su Fecha Límite: 'vencido' | 'porvencer' | 'enplazo' | 'na'
+function dueClassOf(r){ if(!isActiveProy(r)||!r.fecha_lim) return 'na'; const t=new Date(); t.setHours(0,0,0,0); const d=daysBetween(t,r.fecha_lim); if(d<0) return 'vencido'; if(d<=DUE_DAYS) return 'porvencer'; return 'enplazo'; }
+
+function estPill(e){
+  const map={
+    'Aprobado':'pill-green','Rechazado':'pill-red','Por Elaboración':'pill-blue',
+    'Enviado - Pendiente A. C.':'pill-amber','En Revisión Interna':'pill-purple','Proceso de Licitación':'pill-teal','Pausado':'pill-gray'
+  };
+  return map[e]||'pill-gray';
+}
+
+function openDetail(key){
+  const cfg=KPI_DETAIL[key]; if(!cfg) return;
+  MODAL_KEY=key;
+  // La agrupación por proyecto se hace en renderModalRows (una fila por ID,
+  // con cascada para los que tienen varios registros)
+  const rows=RAW.filter(cfg.filter);
+  MODAL_ROWS=rows.sort((a,b)=>(b.fecha_sol?b.fecha_sol.getTime():0)-(a.fecha_sol?a.fecha_sol.getTime():0));
+  const vSol=document.getElementById('f-sol').value;
+  document.getElementById('modal-title').textContent=cfg.title;
+  document.getElementById('modal-sub').textContent=cfg.sub+((vSol&&!cfg.weekly)?' · '+vSol:'');
+  document.getElementById('modal-search').value='';
+  MODAL_PFIELD=cfg.pField||'canal_int';
+  MODAL_PLABEL=MODAL_PFIELD==='responsable'?'Todos los responsables':'Todos los responsables de cuentas';
+  MODAL_ISOP=MODAL_PFIELD==='responsable';
+  MODAL_LAYOUT=cfg.layout||(MODAL_ISOP?'op':'base');
+  MODAL_SHOWESTATUS=!!cfg.showEstatus;
+  document.getElementById('modal-f-ppto').style.display=MODAL_ISOP?'none':'';
+  document.getElementById('modal-f-fact').style.display=key==='porcobrar'?'':'none';
+  document.getElementById('modal-f-fact').value='';
+  document.getElementById('modal-thead').innerHTML=
+    MODAL_LAYOUT==='op'      ? '<th>Fecha Solicitud</th><th>Cliente</th><th>Proyecto</th><th>Servicio</th><th>Departamento</th><th>Responsable</th>'+(MODAL_SHOWESTATUS?'<th>Estatus</th>':'')+'<th class="r">F. Inicio</th><th class="r">F. Revisión</th><th class="r">F. Entrega</th><th class="r">F. Límite</th>'
+    : MODAL_LAYOUT==='pausado'? '<th>Cliente</th><th>Proyecto</th><th>Servicio</th><th>Estatus PPTO</th><th>Nro. PPTO</th><th class="r">F. PPTO</th><th class="r">F. A/R PPTO</th><th>Estatus Proyecto</th><th>Departamento</th>'
+    :                           '<th>Fecha Solicitud</th><th>Canal Interno</th><th>Cliente</th><th>Proyecto</th><th>Servicio</th><th>Departamento</th><th>Responsable</th><th>Estatus PPTO</th><th class="r">Monto</th>';
+  // Barra de vencimiento: solo en modales de Operación con proyectos activos
+  MODAL_DUE='todos';
+  MODAL_SHOWDUE=MODAL_ISOP && MODAL_ROWS.some(r=>isActiveProy(r));
+  const _dueBar=document.getElementById('modal-due-bar'); if(_dueBar) _dueBar.style.display=MODAL_SHOWDUE?'flex':'none';
+  document.querySelectorAll('#modal-due-bar .due-chip').forEach(b=>b.classList.toggle('active',b.dataset.due==='todos'));
+  const _dd=document.getElementById('modal-due-days'); if(_dd) _dd.value=DUE_DAYS;
+  // Tarjetas resumen (solo Ventas): desglose Venta Bruta + Diferencial Cambiario
+  const _mc=document.getElementById('modal-cards');
+  if(_mc){
+    if(key==='ventas'){
+      const vb=MODAL_ROWS.reduce((a,r)=>a+(r.monto_ppto||0),0);
+      const dc=MODAL_ROWS.reduce((a,r)=>a+(r.dif_camb||0),0);
+      _mc.innerHTML=
+        '<div class="modal-card"><div class="mc-lbl">Venta Bruta</div><div class="mc-val">'+fmt(vb)+'</div></div>'+
+        '<div class="modal-card"><div class="mc-lbl">Diferencial Cambiario</div><div class="mc-val">'+fmt(dc)+'</div></div>';
+      _mc.style.display='flex';
+    } else { _mc.style.display='none'; _mc.innerHTML=''; }
+  }
+  poblarModalFiltros(MODAL_ROWS);
+  renderModalRows(MODAL_ROWS);
+  updateModalClearVisibility();
+  updateDueSummary();
+  document.getElementById('modal-ov').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+
+function closeDetail(){
+  document.getElementById('modal-ov').classList.remove('on');
+  document.body.style.overflow='';
+}
+
+function renderModalRows(rows){
+  const tb=document.getElementById('modal-tbody');
+  const cnt=document.getElementById('modal-count');
+  const foot=document.getElementById('modal-foot');
+  const today=new Date(); today.setHours(0,0,0,0);
+  const nCols=MODAL_LAYOUT==='op'?(10+(MODAL_SHOWESTATUS?1:0)):9;
+  if(!rows.length){
+    tb.innerHTML=`<tr><td colspan="${nCols}" class="empty">Sin registros</td></tr>`;
+    cnt.textContent='0 proyectos';
+    foot.innerHTML=`<span>Sin registros</span><span class="mf-total">${fmt(0)}</span>`;
+    return;
+  }
+
+  // Agrupar por ID_Proyecto · cada fila sin ID queda como grupo individual
+  const buildGroups=(rowsSubset)=>{
+    const groups=[]; const byId=new Map();
+    rowsSubset.forEach(r=>{
+      const id=(r.id||'').trim();
+      if(!id){ groups.push({rows:[r]}); return; }
+      if(!byId.has(id)){ const g={rows:[]}; byId.set(id,g); groups.push(g); }
+      byId.get(id).rows.push(r);
+    });
+    return groups;
+  };
+  // Proyectos Asignados (y cualquier modal con estatus mixtos): agrupar primero
+  // por bloque de Estatus del Proyecto, como la vista "Agrupar por" de Sheets.
+  // Nota: si un proyecto tiene fases en distintos estatus, aparece una vez por
+  // cada bloque al que pertenezca alguna de sus fases.
+  const STATUS_BLOCKS=['En Curso','En Revisión','Pausado','Pendiente',''];
+  const blocks = MODAL_SHOWESTATUS
+    ? STATUS_BLOCKS.map(st=>({label: st||'Sin estatus', groups: buildGroups(rows.filter(r=>(r.est_proy||'')===st))})).filter(b=>b.groups.length)
+    : [{label:null, groups: buildGroups(rows)}];
+  const groups = blocks.flatMap(b=>b.groups);
+
+  // Por Cobrar: el total relevante es el saldo pendiente. Ventas: Monto PPTO +
+  // Diferencial Cambiario, igual que la tarjeta. El resto solo Monto PPTO.
+  const total = MODAL_KEY==='porcobrar'
+    ? rows.reduce((a,r)=>a+((r.monto_ppto+(r.dif_camb||0))-r.monto_cob),0)
+    : MODAL_KEY==='ventas'
+    ? rows.reduce((a,r)=>a+r.monto_ppto+(r.dif_camb||0),0)
+    : rows.reduce((a,r)=>a+r.monto_ppto,0);
+  const fDate=d=>d?d.toLocaleDateString('es-MX'):'—';
+  const pick=(rs,f)=>{ const s=new Set(rs.map(x=>(x[f]||'').trim()).filter(Boolean)); return s.size===0?'—':s.size===1?[...s][0]:'Varios'; };
+  const pickDateStr=(rs,f)=>{ const ts=[...new Set(rs.map(x=>x[f]?x[f].getTime():null).filter(v=>v!==null))]; if(!ts.length)return '—'; if(ts.length>1)return 'Varios'; return new Date(ts[0]).toLocaleDateString('es-MX'); };
+  // Celda de Fecha Límite: resalta si está por vencer/vencida y el proyecto sigue activo
+  const limCell=(fl,estProy)=>{ if(!fl) return '<td class="r muted">—</td>'; const txt=fl.toLocaleDateString('es-MX'); if(!['Completado','Cancelado'].includes(estProy)){ const dias=daysBetween(today,fl); if(dias<0) return `<td class="r"><span class="pill pill-red">${txt} · ${Math.abs(dias)}d venc.</span></td>`; if(dias<=DUE_DAYS) return `<td class="r"><span class="pill pill-amber">${txt} · ${dias===0?'hoy':dias+'d'}</span></td>`; } return `<td class="r muted">${txt}</td>`; };
+  const limParent=(rs,estProy)=>{ const ts=[...new Set(rs.map(x=>x.fecha_lim?x.fecha_lim.getTime():null).filter(v=>v!==null))]; if(!ts.length)return '<td class="r muted">—</td>'; if(ts.length>1)return '<td class="r muted">Varios</td>'; return limCell(new Date(ts[0]),estProy); };
+  const epPill=e=>{ const v=(e||'').trim(); if(!v||v==='—') return '—'; if(v==='Varios') return '<span class="pill pill-gray">Varios</span>'; const c=v==='En Revisión'?'pill-purple':v==='Completado'?'pill-green':v==='Cancelado'?'pill-red':v==='Pausado'?'pill-gray':'pill-blue'; return `<span class="pill ${c}">${v}</span>`; };
+
+  let html='';
+  let gi=0;
+  blocks.forEach(block=>{
+    if(MODAL_SHOWESTATUS){
+      const nb=block.groups.length;
+      const pillLabel=block.label==='Sin estatus'?'<span class="pill pill-gray">Sin estatus</span>':epPill(block.label);
+      html+=`<tr class="tbl-total"><td colspan="${nCols}">${pillLabel} · ${nb} proyecto${nb!==1?'s':''}</td></tr>`;
+    }
+  block.groups.forEach((g)=>{
+    const rs=g.rows, multi=rs.length>1, head=rs[0], key='g'+(gi++);
+    if(MODAL_LAYOUT==='op'){
+      // ── Modal SLIM de Operación: Proyecto · Cliente · Responsable · Depto · F.Rev · F.Ent · F.Límite ──
+      const estProy=pick(rs,'est_proy');
+      html+=`<tr class="grp-parent${multi?' has-children':''}"${multi?` onclick="toggleGroup('${key}')"`:''}>
+        <td class="muted">${multi?`<span class="grp-arrow" id="arr-${key}">▶</span>`:'<span class="grp-spacer"></span>'}${pickDateStr(rs,'fecha_sol')}</td>
+        <td>${head.cliente||'—'}</td>
+        <td style="font-weight:500">${pick(rs,'proyecto')}${multi?` <span class="grp-badge">${rs.length}</span>`:''}</td>
+        <td class="muted">${pick(rs,'svc_own')}</td>
+        <td>${deptoPill(pick(rs,'depto'))}</td>
+        <td class="muted">${pick(rs,'responsable')}</td>
+        ${MODAL_SHOWESTATUS?`<td>${epPill(estProy)}</td>`:''}
+        <td class="r muted">${pickDateStr(rs,'fecha_ini')}</td>
+        <td class="r muted">${pickDateStr(rs,'fecha_rev')}</td>
+        <td class="r muted">${pickDateStr(rs,'fecha_ent')}</td>
+        ${limParent(rs,estProy)}
+      </tr>`;
+      if(multi){
+        rs.forEach(r=>{
+          html+=`<tr class="grp-child child-${key}" style="display:none">
+            <td class="muted" style="padding-left:30px">${fDate(r.fecha_sol)}</td>
+            <td>${r.cliente||'—'}</td>
+            <td class="muted">${r.proyecto||'—'}</td>
+            <td class="muted">${r.svc_own||'—'}${r.svc_asoc?` · ${r.svc_asoc}`:''}</td>
+            <td>${deptoPill(r.depto)}</td>
+            <td class="muted">${r.responsable||'—'}</td>
+            ${MODAL_SHOWESTATUS?`<td>${epPill(r.est_proy)}</td>`:''}
+            <td class="r muted">${fDate(r.fecha_ini)}</td>
+            <td class="r muted">${fDate(r.fecha_rev)}</td>
+            <td class="r muted">${fDate(r.fecha_ent)}</td>
+            ${limCell(r.fecha_lim,r.est_proy)}
+          </tr>`;
+        });
+      }
+    } else if(MODAL_LAYOUT==='pausado'){
+      // ── Modal "Presupuestos Pausados" (columnas atípicas) ──
+      const svcA=pick(rs,'svc_asoc'), estP=pick(rs,'est_ppto');
+      html+=`<tr class="grp-parent${multi?' has-children':''}"${multi?` onclick="toggleGroup('${key}')"`:''}>
+        <td style="font-weight:500">${multi?`<span class="grp-arrow" id="arr-${key}">▶</span>`:'<span class="grp-spacer"></span>'}${head.cliente||'—'}${multi?` <span class="grp-badge">${rs.length}</span>`:''}</td>
+        <td class="muted">${pick(rs,'proyecto')}</td>
+        <td class="muted">${pick(rs,'svc_own')}${svcA!=='—'?` · ${svcA}`:''}</td>
+        <td>${estP==='—'?'—':`<span class="pill ${estP==='Varios'?'pill-gray':estPill(estP)}">${estP}</span>`}</td>
+        <td class="muted">${pick(rs,'nro_ppto')}</td>
+        <td class="r muted">${pickDateStr(rs,'fecha_ppto')}</td>
+        <td class="r muted">${pickDateStr(rs,'fecha_ar')}</td>
+        <td>${epPill(pick(rs,'est_proy'))}</td>
+        <td>${deptoPill(pick(rs,'depto'))}</td>
+      </tr>`;
+      if(multi){
+        rs.forEach(r=>{
+          html+=`<tr class="grp-child child-${key}" style="display:none">
+            <td class="muted" style="padding-left:30px">${r.cliente||'—'}</td>
+            <td class="muted">${r.proyecto||'—'}</td>
+            <td class="muted">${r.svc_own||'—'}${r.svc_asoc?` · ${r.svc_asoc}`:''}</td>
+            <td><span class="pill ${estPill(r.est_ppto)}">${r.est_ppto||'—'}</span></td>
+            <td class="muted">${r.nro_ppto||'—'}</td>
+            <td class="r muted">${fDate(r.fecha_ppto)}</td>
+            <td class="r muted">${fDate(r.fecha_ar)}</td>
+            <td>${epPill(r.est_proy)}</td>
+            <td>${deptoPill(r.depto)}</td>
+          </tr>`;
+        });
+      }
+    } else {
+      // ── Modal base (tarjetas de arriba): 9 columnas ──
+      // Por Cobrar: saldo pendiente por fila. Ventas: PPTO + Diferencial. Resto: solo PPTO.
+      const montoOf = r => MODAL_KEY==='porcobrar' ? ((r.monto_ppto+(r.dif_camb||0))-r.monto_cob)
+        : MODAL_KEY==='ventas' ? (r.monto_ppto+(r.dif_camb||0))
+        : r.monto_ppto;
+      const montoGrp=rs.reduce((a,r)=>a+montoOf(r),0);
+      const svc=pick(rs,'svc_own'), dep=pick(rs,'depto'), resp=pick(rs,'responsable'), est=pick(rs,'est_ppto');
+      const estCls=est==='Varios'?'pill-gray':estPill(est);
+      html+=`<tr class="grp-parent${multi?' has-children':''}"${multi?` onclick="toggleGroup('${key}')"`:''}>
+        <td class="muted">${multi?`<span class="grp-arrow" id="arr-${key}">▶</span>`:'<span class="grp-spacer"></span>'}${fDate(head.fecha_sol)}</td>
+        <td>${head.canal_int||'—'}</td>
+        <td style="font-weight:500">${head.cliente||'—'}${multi?` <span class="grp-badge">${rs.length}</span>`:''}</td>
+        <td class="muted">${pick(rs,'proyecto')}</td>
+        <td class="muted">${svc}</td>
+        <td>${deptoPill(dep)}</td>
+        <td class="muted">${resp}</td>
+        <td>${est==='—'?'—':`<span class="pill ${estCls}">${est}</span>`}</td>
+        <td class="r" style="color:var(--teal);font-weight:600">${fmt(montoGrp)}</td>
+      </tr>`;
+      if(multi){
+        rs.forEach(r=>{
+          html+=`<tr class="grp-child child-${key}" style="display:none">
+            <td class="muted" style="padding-left:30px">${fDate(r.fecha_sol)}</td>
+            <td>${r.canal_int||'—'}</td>
+            <td>${r.cliente||'—'}</td>
+            <td class="muted">${r.proyecto||'—'}</td>
+            <td class="muted">${r.svc_own||'—'}${r.svc_asoc?` · ${r.svc_asoc}`:''}</td>
+            <td>${deptoPill(r.depto)}</td>
+            <td class="muted">${r.responsable||'—'}</td>
+            <td><span class="pill ${estPill(r.est_ppto)}">${r.est_ppto||'—'}</span></td>
+            <td class="r" style="color:var(--teal)">${fmt(montoOf(r))}</td>
+          </tr>`;
+        });
+      }
+    }
+  });
+  });
+  tb.innerHTML=html;
+
+  const nProj=groups.length;
+  cnt.textContent=nProj+' proyecto'+(nProj!==1?'s':'');
+  foot.innerHTML=MODAL_LAYOUT!=='base'
+    ? `<span>Total · ${nProj} proyecto${nProj!==1?'s':''}</span><span class="mf-total"></span>`
+    : `<span>Total · ${nProj} proyecto${nProj!==1?'s':''}</span><span class="mf-total">${fmt(total)}</span>`;
+}
+
+// Expandir/colapsar los registros de un proyecto en el modal
+function toggleGroup(key){
+  const arr=document.getElementById('arr-'+key);
+  const open=arr?arr.classList.toggle('open'):false;
+  document.querySelectorAll('.child-'+key).forEach(tr=>{ tr.style.display=open?'table-row':'none'; });
+}
+
+// Poblar el select de Departamento con los valores presentes en las filas del modal.
+// El select de Responsable se puebla aparte (en cascada según el departamento elegido).
+function poblarModalFiltros(rows){
+  const clientes=[...new Set(rows.map(r=>r.cliente).filter(Boolean))].sort();
+  const selC=document.getElementById('modal-f-cliente');
+  selC.innerHTML='<option value="">Todos los clientes</option>'+
+    clientes.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('');
+  selC.value='';
+  const deptos=[...new Set(rows.map(r=>r.depto).filter(Boolean))].sort();
+  const selD=document.getElementById('modal-f-depto');
+  selD.innerHTML='<option value="">Todos los departamentos</option>'+
+    deptos.map(d=>`<option value="${d.replace(/"/g,'&quot;')}">${d}</option>`).join('');
+  selD.value='';
+  document.getElementById('modal-f-rc').value='';
+  document.getElementById('modal-f-ppto').value='';
+  poblarModalRC();
+  poblarModalPPTO();
+}
+
+// Poblar "Responsable de Cuentas" (campo Canal Interno) con los valores presentes,
+// filtrados por el departamento seleccionado. Conserva la selección si sigue siendo válida.
+function poblarModalRC(){
+  const fd=document.getElementById('modal-f-depto').value;
+  const base=fd?MODAL_ROWS.filter(r=>r.depto===fd):MODAL_ROWS;
+  const rcs=[...new Set(base.map(r=>r[MODAL_PFIELD]).filter(Boolean))].sort();
+  const selR=document.getElementById('modal-f-rc');
+  const cur=selR.value;
+  selR.innerHTML=`<option value="">${MODAL_PLABEL}</option>`+
+    rcs.map(r=>`<option value="${r.replace(/"/g,'&quot;')}">${r}</option>`).join('');
+  selR.value=(cur&&rcs.includes(cur))?cur:'';
+}
+
+// Poblar "Responsable de PPTO" (campo Responsable Elab. PPTO), en cascada por departamento.
+function poblarModalPPTO(){
+  const fd=document.getElementById('modal-f-depto').value;
+  const base=fd?MODAL_ROWS.filter(r=>r.depto===fd):MODAL_ROWS;
+  const list=[...new Set(base.map(r=>r.resp_ppto).filter(Boolean))].sort();
+  const sel=document.getElementById('modal-f-ppto');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Todos los resp. de PPTO</option>'+
+    list.map(r=>`<option value="${r.replace(/"/g,'&quot;')}">${r}</option>`).join('');
+  sel.value=(cur&&list.includes(cur))?cur:'';
+}
+
+// Al cambiar el departamento: refrescar opciones de responsables y re-filtrar
+function onModalDeptoChange(){
+  poblarModalRC();
+  poblarModalPPTO();
+  filterModal();
+}
+
+function limpiarModalFiltros(){
+  document.getElementById('modal-search').value='';
+  document.getElementById('modal-f-cliente').value='';
+  document.getElementById('modal-f-depto').value='';
+  poblarModalRC();
+  poblarModalPPTO();
+  document.getElementById('modal-f-rc').value='';
+  document.getElementById('modal-f-ppto').value='';
+  document.getElementById('modal-f-fact').value='';
+  renderModalRows(MODAL_ROWS);
+  updateModalClearVisibility();
+}
+
+// El botón "Limpiar filtros" del modal solo se muestra si hay algún filtro activo
+function updateModalClearVisibility(){
+  const q=document.getElementById('modal-search').value.trim();
+  const fc=document.getElementById('modal-f-cliente').value;
+  const fd=document.getElementById('modal-f-depto').value;
+  const fr=document.getElementById('modal-f-rc').value;
+  const fp=document.getElementById('modal-f-ppto').value;
+  const ff=document.getElementById('modal-f-fact').value;
+  const b=document.getElementById('modal-clear'); if(b) b.style.display=(q||fc||fd||fr||fp||ff)?'inline-block':'none';
+}
+
+function filterModal(){
+  const q =document.getElementById('modal-search').value.trim().toLowerCase();
+  const fc=document.getElementById('modal-f-cliente').value;
+  const fd=document.getElementById('modal-f-depto').value;
+  const fr=document.getElementById('modal-f-rc').value;
+  let f=MODAL_ROWS;
+  if(fc) f=f.filter(r=>r.cliente===fc);
+  if(fd) f=f.filter(r=>r.depto===fd);
+  if(fr) f=f.filter(r=>r[MODAL_PFIELD]===fr);
+  const fp=document.getElementById('modal-f-ppto').value;
+  if(fp) f=f.filter(r=>r.resp_ppto===fp);
+  const ff=document.getElementById('modal-f-fact').value;
+  if(ff) f=f.filter(r=> ff==='__blank__' ? !r.est_fact : r.est_fact===ff);
+  if(MODAL_DUE!=='todos'){ const dm=dueMap(MODAL_ROWS), want=MODAL_DUE==='vencidos'?'vencido':'porvencer'; f=f.filter(r=>dm.get(idKey(r))===want); }
+  if(q)  f=f.filter(r=>[r.cliente,r.svc_own,r.canal_int,r.est_ppto].some(x=>(x||'').toLowerCase().includes(q)));
+  renderModalRows(f);
+  updateModalClearVisibility();
+}
+
+function idKey(r){ return (r.id||'').trim()||('p:'+(r.proyecto||'').trim()); }
+// Mapa id→clase de vencimiento más urgente del proyecto (vencido > porvencer > enplazo)
+function dueMap(rows){ const rank={vencido:3,porvencer:2,enplazo:1,na:0}; const m=new Map(); rows.forEach(r=>{ const id=idKey(r),c=dueClassOf(r); if(!m.has(id)||rank[c]>rank[m.get(id)]) m.set(id,c); }); return m; }
+// Resumen de vencimiento. byProject=true cuenta proyectos únicos (modal); false cuenta registros (Agenda)
+function dueSummaryHTML(rows, byProject){
+  let venc=0,pv=0;
+  if(byProject){ dueMap(rows).forEach(c=>{ if(c==='vencido')venc++; else if(c==='porvencer')pv++; }); }
+  else { rows.forEach(r=>{ const c=dueClassOf(r); if(c==='vencido')venc++; else if(c==='porvencer')pv++; }); }
+  return `<span class="due-stat due-venc">🔴 ${venc} vencidos</span><span class="due-stat due-pv">🟡 ${pv} por vencer</span>`;
+}
+function updateDueSummary(){ const el=document.getElementById('modal-due-sum'); if(el) el.innerHTML=dueSummaryHTML(MODAL_ROWS,true); }
+function setModalDue(m){ MODAL_DUE=m; document.querySelectorAll('#modal-due-bar .due-chip').forEach(b=>b.classList.toggle('active',b.dataset.due===m)); filterModal(); }
+function setAgDue(m){ AG_DUE=m; document.querySelectorAll('#ag-due-controls .due-chip').forEach(b=>b.classList.toggle('active',b.dataset.due===m)); renderAgenda(); }
+function setCalDue(m){ CAL_DUE=m; document.querySelectorAll('#cal-due-row .due-chip').forEach(b=>b.classList.toggle('active',b.dataset.due===m)); renderCalendar(); }
+// El selector de días es compartido entre calendario, modal y Agenda
+function setDueDays(v){ DUE_DAYS=+v; ['modal-due-days','ag-due-days','cal-due-days'].forEach(id=>{ const e=document.getElementById(id); if(e)e.value=v; }); updateDueSummary(); filterModal(); renderAgenda(); renderCalendar(); }
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDetail(); closeCalDetail(); } });
+</script>
+
+<!-- MODAL DETALLE -->
+<div class="modal-ov" id="modal-ov" onclick="if(event.target===this)closeDetail()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title" id="modal-title">—</div>
+        <div class="modal-sub" id="modal-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeDetail()" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-tools">
+      <input class="modal-search" id="modal-search" placeholder="Buscar cliente, servicio, canal o estatus..." oninput="filterModal()">
+      <select id="modal-f-cliente" onchange="filterModal()"><option value="">Todos los clientes</option></select>
+      <select id="modal-f-depto" onchange="onModalDeptoChange()"><option value="">Todos los departamentos</option></select>
+      <select id="modal-f-rc" onchange="filterModal()"><option value="">Todos los responsables de cuentas</option></select>
+      <select id="modal-f-ppto" onchange="filterModal()"><option value="">Todos los resp. de PPTO</option></select>
+      <select id="modal-f-fact" onchange="filterModal()" style="display:none">
+        <option value="">Todos los estatus de facturación</option>
+        <option value="Facturado">Facturado</option>
+        <option value="No Facturado">No Facturado</option>
+        <option value="__blank__">Sin estatus</option>
+      </select>
+      <button class="btn-clear-f" id="modal-clear" onclick="limpiarModalFiltros()" style="display:none">✕ Limpiar filtros</button>
+      <span class="modal-count" id="modal-count"></span>
+    </div>
+    <div class="modal-due-bar" id="modal-due-bar" style="display:none">
+      <span class="modal-due-sum" id="modal-due-sum"></span>
+      <div class="due-chips">
+        <button class="due-chip active" data-due="todos" onclick="setModalDue('todos')">Todos</button>
+        <button class="due-chip" data-due="porvencer" onclick="setModalDue('porvencer')">Por vencer</button>
+        <button class="due-chip" data-due="vencidos" onclick="setModalDue('vencidos')">Vencidos</button>
+      </div>
+      <label class="due-days">≤ <select id="modal-due-days" onchange="setDueDays(this.value)"><option>3</option><option selected>7</option><option>15</option></select> días</label>
+    </div>
+    <div class="modal-cards" id="modal-cards" style="display:none"></div>
+    <div class="modal-body">
+      <div class="tbl-wrap"><table>
+        <thead><tr id="modal-thead">
+          <th>Fecha Solicitud</th><th>Canal Interno</th><th>Cliente</th>
+          <th>Proyecto</th><th>Servicio</th><th>Departamento</th><th>Responsable</th><th>Estatus PPTO</th><th class="r">Monto</th>
+        </tr></thead>
+        <tbody id="modal-tbody"></tbody>
+      </table></div>
+    </div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </div>
+</div>
+
+<!-- DETALLE PUNTO DE EQUILIBRIO -->
+<div class="modal-ov" id="pe-modal-ov" onclick="if(event.target===this)closePEDetail()">
+  <div class="modal" style="max-width:1040px">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title">Punto de Equilibrio · Detalle por Departamento</div>
+        <div class="modal-sub">Venta mínima mensual y anual para cubrir gastos (Costo Fijo + Gasto Asignado)</div>
+      </div>
+      <button class="modal-close" onclick="closePEDetail()" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body" id="pe-modal-body"></div>
+  </div>
+</div>
+
+<!-- DETALLE DE TARJETA DEL CALENDARIO -->
+<div class="cal-detail-ov" id="cal-detail-ov" onclick="if(event.target===this)closeCalDetail()">
+  <div class="cal-detail">
+    <button class="modal-close" onclick="closeCalDetail()" aria-label="Cerrar" style="position:absolute;top:14px;right:14px">✕</button>
+    <div id="cal-detail-body"></div>
+  </div>
+</div>
+
+</body>
+</html>
