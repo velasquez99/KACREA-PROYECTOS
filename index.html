@@ -234,6 +234,9 @@ body.ro .in,body.ro .pill{pointer-events:none}
 .modnav .brand{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:10px}
 .modnav a{color:var(--muted);text-decoration:none;font-weight:500;padding:6px 12px;border-radius:8px}
 .modnav a:hover{background:var(--surface)}
+.navnew{margin-left:auto;border:0;background:var(--accent);color:var(--accent-ink);font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer}
+.navnew:hover{filter:brightness(1.08)}
+body.ro .navnew{display:none}
 .modnav a[aria-current="page"]{background:var(--ink);color:var(--bg)}
 button.sync{cursor:pointer}
 .shc{display:inline-block;padding:6px 10px;font-size:12.5px;white-space:nowrap}.shc.m,.shc .m{color:var(--muted)}.shc.bad{color:var(--bad)}.shc.num{font-family:var(--mono);font-variant-numeric:tabular-nums}.shc small.warn{color:var(--warn)}
@@ -357,6 +360,7 @@ body{margin:0}img{max-width:100%}[hidden]{display:none!important}
     <a href="#comercial" data-mod="comercial">Comercial</a>
     <a href="#administrativo" data-mod="administrativo">Administrativo</a>
     <a href="#operativo" data-mod="operativo">Operativo</a>
+    <button class="navnew" id="navNew" type="button">+ Nuevo proyecto</button>
   </nav>
   <section id="appPanel"><div id="panel"></div></section>
   <div id="appSys" hidden></div>
@@ -889,6 +893,12 @@ function renderDrawer(){
     <div class="dr-tags">${h?`<span class="pill ro t-${h.estado==="Aprobado"?"ok":"idle"}">PPTO ${esc(h.estado)}</span>`:`<span class="pill ro t-idle">${p.idHoja?"ID no encontrado":"Sin ID de hoja"}</span>`}${al.slice(0,3).map(a=>`<span class="tag s${a.s}">${esc(a.t)}</span>`).join("")}</div></div>
     <button class="dr-x" id="drClose" aria-label="Cerrar ficha">✕</button></div>
   <div class="dr-b">
+    <section><h3>Datos del proyecto</h3><div class="dg">
+      <label class="df full"><span>Nombre del proyecto</span><input class="in" data-k="proyecto" value="${esc(p.proyecto||"")}"${ro}></label>
+      ${drawerField("Marca / cliente","marca","text")}${drawerField("Evento / ocasión","evento","text")}
+      <label class="df"><span>ID hoja maestra</span><input class="in" data-k="idHoja" list="dl-hoja" value="${esc(p.idHoja||"")}" placeholder="KAC-26…"${ro}></label>
+      ${drawerField("Servicio","servicio","text")}
+    </div></section>
     <section><h3>Dónde estamos</h3>
       <div class="dg">${drawerField("Fase","fase","sel",FASES)}</div>
       <label class="df full"><span>Estatus actual${p.estatusFecha?` <small>· actualizado ${whenLabel(p.estatusFecha)}</small>`:""}</span><textarea class="in ta" data-k="estatusActual" rows="3" placeholder="En qué va el proyecto, qué falta, qué bloquea…"${ro}>${esc(p.estatusActual||"")}</textarea></label>
@@ -916,7 +926,8 @@ function renderDrawer(){
   D.pending=false;
 }
 function drChange(el){if(!el.dataset.k||!D.id)return;let v=el.value;
-  if(el.type==="date")v=v||null;else if(typeof v==="string")v=el.tagName==="TEXTAREA"?v.trim():v.trim();
+  if(el.type==="date")v=v||null;else if(typeof v==="string")v=v.trim();
+  if(el.dataset.k==="idHoja")v=v.toUpperCase();
   save(D.id,el.dataset.k,v);
   if(el.dataset.k==="estatusActual")save(D.id,"estatusFecha",TODAY);
   if(el.tagName==="SELECT")el.className="pill t-"+tone(v);
@@ -930,7 +941,7 @@ function initDrawer(){
     drChange(el);});
   dr.addEventListener("focusout",()=>setTimeout(()=>{if(D.pending&&!inDrawer()&&D.id){renderDrawer();renderAll();}},0));
   dr.addEventListener("click",e=>{
-    if(e.target.closest("#drClose")){closeDrawer();return;}
+    if(e.target.closest("#drClose")||e.target.closest("#nfCancel")){closeDrawer();return;}
     const d=e.target.closest("[data-entdel]");
     if(d){if(!d.classList.contains("armed")){d.classList.add("armed");d.textContent="¿Seguro?";setTimeout(()=>{if(d.isConnected){d.classList.remove("armed");d.textContent="Quitar";}},3000);return;}
       const p=S.projects.get(D.id);saveEnts(D.id,ents(p).filter(x=>x.id!==d.dataset.entdel));renderAll();renderDrawer();return;}
@@ -938,7 +949,13 @@ function initDrawer(){
       if(p.proxReunion&&p.proxReunion<=TODAY)save(D.id,"proxReunion",null);
       renderAll();renderDrawer();toast("Reunión registrada. Anota los acuerdos en la bitácora y fija la próxima.");setTimeout(()=>{const t=$("#bitT");if(t)t.focus();},60);}
   });
-  dr.addEventListener("submit",e=>{e.preventDefault();const p=S.projects.get(D.id);if(!p)return;
+  dr.addEventListener("submit",e=>{e.preventDefault();
+    if(e.target.id==="newForm"){const g=k=>{const x=$("#nf_"+k);return x?x.value.trim():"";};
+      const name=g("proyecto");if(!name){$("#nf_proyecto").focus();return;}
+      const vals={proyecto:name,marca:g("marca"),evento:g("evento"),servicio:g("servicio"),idHoja:g("idHoja").toUpperCase(),fase:g("fase")||"Planificación",
+        fechaInicio:g("fechaInicio")||null,fechaFin:g("fechaFin")||null,proxReunion:g("proxReunion")||null,respOp:g("respOp"),createdAt:new Date().toISOString()};
+      const id=createProject(vals);if(id){toast(`“${name}” creado`);openDrawer(id);}return;}
+    const p=S.projects.get(D.id);if(!p)return;
     if(e.target.id==="entForm"){const t=$("#entT").value.trim();if(!t)return;
       saveEnts(D.id,[...ents(p),{id:uid(),t,f:$("#entF").value||null,r:$("#entR").value.trim(),ok:false}]);renderAll();renderDrawer();setTimeout(()=>{const x=$("#entT");if(x)x.focus();},40);}
     if(e.target.id==="bitForm"){const t=$("#bitT").value.trim();if(!t)return;
@@ -1103,13 +1120,42 @@ function setView(v){S.view=v;$("#tabAgenda").setAttribute("aria-pressed",v==="ag
 $("#tabAgenda").onclick=()=>setView("agenda");$("#tabTabla").onclick=()=>setView("tabla");$("#tabInd").onclick=()=>setView("ind");$("#tabEq").onclick=()=>setView("eq");$("#tabProv").onclick=()=>setView("prov");
 $("#grpToggle").querySelectorAll("button").forEach(b=>{b.setAttribute("aria-pressed",!S.hidden[b.dataset.g]);b.onclick=()=>{S.hidden[b.dataset.g]=!S.hidden[b.dataset.g];b.setAttribute("aria-pressed",!S.hidden[b.dataset.g]);try{localStorage.setItem("kc-hidden",JSON.stringify(S.hidden));}catch(e){}renderTable();};});
 
-$("#btnAdd").onclick=()=>{
+function newDoc(){return {proyecto:"",evento:"",marca:S.f.marca!=="all"?S.f.marca:"",servicio:"",idHoja:"",fase:"Planificación",estatusActual:"",estatusFecha:null,entregables:[],bitacora:[],temaReunion:"",fechaMontaje:null,fechaInicio:null,fechaFin:null,respOp:"",respCre:"",respDis:"",respAdm:"",venue:"Pendiente",concepto:"Pendiente",distribucion:"Pendiente",lookfeel:"Pendiente",pptoEjecEstado:"Pendiente",provTecnico:"",provImpresion:"",ultReunion:null,proxReunion:null,pptoCliente:"Por enviar",odc:"No",factura:"No",montoFactura:null,costosEst:null,notas:"",custom:{},createdAt:new Date().toISOString()};}
+function createProject(vals){
+  if(S.ro)return null;
   const id="p"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-  const doc={proyecto:"",evento:"",marca:S.f.marca!=="all"?S.f.marca:"",servicio:"",idHoja:"",fase:"Planificación",estatusActual:"",estatusFecha:null,entregables:[],bitacora:[],temaReunion:"",fechaMontaje:null,fechaInicio:null,fechaFin:null,respOp:"",respCre:"",respDis:"",respAdm:"",venue:"Pendiente",concepto:"Pendiente",distribucion:"Pendiente",lookfeel:"Pendiente",pptoEjecEstado:"Pendiente",provTecnico:"",provImpresion:"",ultReunion:null,proxReunion:null,pptoCliente:"Por enviar",odc:"No",factura:"No",montoFactura:null,costosEst:null,notas:"",custom:{},createdAt:new Date().toISOString()};
-  S.projects.set(id,{id,...doc});S.f.mes="all";S.f.alerts=false;S.f.q="";syncFilterInputs();S.focusNew=id;
-  if(S.view!=="tabla")setView("tabla");else renderAll();
+  const doc={...newDoc(),...vals};
+  S.projects.set(id,{id,...doc});
   if(S.db)enqueue("p/"+id,()=>S.db.doc("projects/"+id).set(doc));
-};
+  renderAll();return id;
+}
+function openNew(){
+  D.id=null;const el=$("#drawer");const marcas=[...new Set([...S.projects.values()].map(p=>p.marca).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+  el.innerHTML=`<div class="dr-h"><div></div><div class="dr-tt"><div class="eyebrow">Acceso rápido</div><h2>Nuevo proyecto</h2><div class="note">Con el nombre basta para crearlo. Lo demás lo puedes completar luego en su ficha.</div></div><button class="dr-x" id="drClose" aria-label="Cerrar">✕</button></div>
+  <form class="dr-b" id="newForm">
+    <section><h3>Datos del proyecto</h3><div class="dg">
+      <label class="df full"><span>Nombre del proyecto *</span><input class="in" id="nf_proyecto" required placeholder="Ej. Lanzamiento PAN Integral – Evento"></label>
+      <label class="df"><span>Marca / cliente</span><input class="in" id="nf_marca" list="dl-nfmarca" placeholder="Ej. Pepsi"></label>
+      <label class="df"><span>Evento / ocasión</span><input class="in" id="nf_evento" placeholder="Ej. Encendido de Bella Vista"></label>
+      <label class="df full"><span>Servicio</span><input class="in" id="nf_servicio" placeholder="Ej. Conceptualización y producción"></label>
+      <label class="df"><span>ID hoja maestra</span><input class="in" id="nf_idHoja" list="dl-hoja" placeholder="KAC-26… (si ya existe)"></label>
+      <label class="df"><span>Fase</span><select class="pill t-idle" id="nf_fase">${FASES.map(f=>`<option>${f}</option>`).join("")}</select></label>
+    </div><datalist id="dl-nfmarca">${marcas.map(m=>`<option value="${esc(m)}">`).join("")}</datalist></section>
+    <section><h3>Fechas</h3><div class="dg">
+      <label class="df"><span>Evento desde</span><input class="in in-date" type="date" id="nf_fechaInicio"></label>
+      <label class="df"><span>Evento hasta</span><input class="in in-date" type="date" id="nf_fechaFin"></label>
+      <label class="df"><span>Próxima reunión</span><input class="in in-date" type="date" id="nf_proxReunion"></label>
+    </div></section>
+    <section><h3>Responsable</h3><div class="dg">
+      <label class="df"><span>Operativo</span><input class="in" id="nf_respOp" list="dl-people" placeholder="Nombre"></label>
+    </div></section>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" type="submit">Crear y abrir ficha</button><button class="btn" type="button" id="nfCancel">Cancelar</button></div>
+  </form>`;
+  $("#drawer").hidden=false;$("#drawerOv").hidden=false;document.body.classList.add("dopen");
+  setTimeout(()=>{const i=$("#nf_proyecto");if(i)i.focus();},50);
+}
+$("#btnAdd").onclick=openNew;
+
 $("#shBtn").onclick=()=>{SH.err=null;SH.loaded=false;renderShStatus();loadSheet();};
 $("#btnCsv").onclick=()=>{
   const cols=[...COLS.filter(c=>c.type!=="calc"),...S.custom.map(c=>({key:"custom."+c.id,label:c.label}))];
@@ -1138,7 +1184,7 @@ $("#cList").addEventListener("click",e=>{
 /* ---------- boot ---------- */
 const hoy=new Date();$("#today").textContent="Hoy · "+hoy.getDate()+" "+MES3[hoy.getMonth()]+" "+hoy.getFullYear();
 renderAll();
-initDrawer();setView("agenda");initSys();window.addEventListener("hashchange",route);route();
+initDrawer();setView("agenda");$("#navNew").onclick=openNew;initSys();window.addEventListener("hashchange",route);route();
 loadSheet();setInterval(loadSheet,5*60*1000);
 let ren=0;function schedule(){cancelAnimationFrame(ren);ren=requestAnimationFrame(renderAll);}
 (async()=>{
