@@ -460,6 +460,16 @@ body[data-mod="operacion"] #kpi-grid{display:none}
 .gate-card input{padding:14px;border-radius:10px;border:1.5px solid var(--border-md,#2a2f3a);background:transparent;color:inherit;font-size:20px;letter-spacing:.3em;text-align:center}
 .gate-card button{padding:12px;border-radius:10px;border:0;background:var(--purple,#7c6cf0);color:#fff;font-weight:600;cursor:pointer}
 .gate-card small{color:#f07167;text-align:center}
+
+/* --- barra de módulos compartida con Eventos --- */
+.sk-nav{position:relative;z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:10px 24px;background:var(--surface,#fff);border-bottom:1px solid var(--border-md,#e5e7eb)}
+.sk-brand{font:600 11px 'DM Mono',ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--muted,#6b7280);margin-right:12px}
+.sk-nav a{text-decoration:none;color:var(--muted,#6b7280);font-weight:500;font-size:14px;padding:7px 14px;border-radius:8px}
+.sk-nav a:hover{background:var(--surface2,#f3f4f6);color:var(--text,#111)}
+.sk-nav a[aria-current="page"]{background:var(--text,#111);color:var(--surface,#fff)}
+.sk-nav .sk-ev{margin-left:auto;color:var(--purple,#6d5dfc);border:1px solid currentColor}
+@media(max-width:600px){.sk-nav{padding:8px 12px}.sk-brand{display:none}.sk-nav .sk-ev{margin-left:0}}
+.main>.tabs{display:none}
 </style>
 <script src="config.js"></script>
 <script>
@@ -475,6 +485,13 @@ body[data-mod="operacion"] #kpi-grid{display:none}
 </script>
 </head>
 <body>
+<nav class="sk-nav" aria-label="Módulos del sistema">
+  <span class="sk-brand">Sistema Kacrea</span>
+  <a href="#comercial" data-m="resumen">Comercial</a>
+  <a href="#administrativo" data-m="cobranza">Administrativo</a>
+  <a href="#operativo" data-m="operacion">Operativo</a>
+  <a href="index.html" class="sk-ev">Eventos · Agenda</a>
+</nav>
 
 <header class="hdr">
   <div class="hdr-l">
@@ -2333,6 +2350,7 @@ function switchTab(name){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));
   document.body.dataset.mod=name;
+  document.querySelectorAll('.sk-nav a[data-m]').forEach(a=>a.setAttribute('aria-current',a.dataset.m===name?'page':'false'));
   if(MOD_HASH[name]&&location.hash!=='#'+MOD_HASH[name]) history.replaceState(null,'','#'+MOD_HASH[name]);
 }
 (function(){const inv={comercial:'resumen',administrativo:'cobranza',operativo:'operacion'};
