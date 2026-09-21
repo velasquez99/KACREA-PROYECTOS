@@ -744,7 +744,7 @@ body[data-mod="operacion"] #kpi-grid{display:none}
 <script>
 const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbze9phxDf-p3J3hHOXTGM_o7dA88GYJhTr6MhqNKiZhf7SkqdT-ZPOF8RwFEjN_1Ure/exec';
 const CSV_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTPL2nRtCfahaZtNWC2fkEAZRaJ-rwvZl8ZI2_dbilNhfGW34MddrrG72obS50lyis1P8NsMFlGtIs/pub?gid=989528746&single=true&output=csv';
-const PROXIES     = [()=>APPS_SCRIPT, u=>`https://corsproxy.io/?${encodeURIComponent(u)}`, u=>u];
+const PROXIES     = [u=>u, ()=>APPS_SCRIPT, u=>`https://corsproxy.io/?${encodeURIComponent(u)}`];
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 function mesIdx(s){ if(!s)return -1; const i=MESES.findIndex(m=>s.toLowerCase().includes(m.toLowerCase())); return i; }
@@ -808,7 +808,8 @@ async function loadData(){
   for(const px of PROXIES){
     try{
       const url=typeof px==='function'&&px.length===0?px():px(CSV_URL);
-      const r=await fetch(url);
+      const ctl=new AbortController();const tmo=setTimeout(()=>ctl.abort(),15000);
+      const r=await fetch(url,{signal:ctl.signal,cache:'no-store'});clearTimeout(tmo);
       if(!r.ok)throw new Error('HTTP '+r.status);
       const t=await r.text();
       if(!t||t.length<10)throw new Error('Vacío');
