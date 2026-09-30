@@ -336,7 +336,11 @@ body.dopen{overflow:hidden}
 .est{display:flex;flex-direction:column;gap:3px;padding:4px 6px;min-width:172px}
 .ests{font-size:10.5px;color:var(--muted);max-width:196px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .man{display:flex;align-items:center;gap:6px;padding:0 6px}
-.mtag{font:500 9.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 6px;font-style:normal;white-space:nowrap}
+.mtag{display:inline-flex;align-items:center;gap:3px;font:500 9.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 6px;font-style:normal;white-space:nowrap}
+.mtag.man{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-soft)}
+.mtag.hj{opacity:.75}
+.mtag .ox{border:0;background:none;color:inherit;cursor:pointer;font-size:12px;line-height:1;padding:0 0 0 1px}
+.in.ovr{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))!important}
 details.ag-b>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px;padding:1px 0}
 details.ag-b>summary::-webkit-details-marker{display:none}
 details.ag-b>summary h3{margin:0}
@@ -545,7 +549,6 @@ const COLS=[
  {key:"pptoEjecEstado",label:"Estatus PPTO ejecución",type:"step",group:"op"},
  {key:"provTecnico",label:"Proveedor pantalla · sonido · luces · hierros",type:"tags",group:"op",w:170},
  {key:"provImpresion",label:"Proveedor impresión · corpóreos · MDF",type:"tags",group:"op",w:170},
- {key:"ultReunion",label:"Última reunión",type:"date",group:"op"},
  {key:"temaReunion",label:"Tema próxima reunión",type:"text",group:"op",w:180},
  {key:"sh.estado",label:"Estatus PPTO",type:"sheet",group:"adm"},
  {key:"sh.montoApr",label:"Ingreso aprobado",type:"sheet",group:"adm"},
@@ -640,44 +643,54 @@ async function loadSheet(){
 }
 const shOf=p=>p&&p.idHoja?SH.byId.get(String(p.idHoja).trim().toUpperCase())||null:null;
 function shVal(p,k){const h=shOf(p);if(!h)return null;return h[k.slice(3)];}
-const MT="Manual · este proyecto no está enlazado a la hoja maestra";
+const OVR={"sh.estado":["pptoM","estado","sel"],"sh.montoApr":["ingresoM","montoApr","money"],
+  "sh.fact":["factM","facturado","yn"],"sh.cobrado":["cobradoM","cobrado","money"],
+  "sh.fechaSol":["fechaSolM","fechaSol","date"],"sh.canalExt":["canalExtM","canalExt","text"],
+  "sh.canalInt":["canalIntM","canalInt","text"]};
+const ENVIADO=new Set(["Enviado al cliente","Enviado - Pendiente A. C.","Aprobado","Rechazado"]);
+function hojaVal(p,hk){const h=shOf(p);if(!h)return null;
+  if(hk==="facturado")return h.facturado?"Sí":"No";
+  const v=h[hk];return (v===""||v===undefined)?null:v;}
+/* Valor efectivo de una celda que también vive en la hoja maestra.
+   Lo que escribes a mano manda; si lo dejas vacío, se usa la hoja. */
+function ovr(p,ck){const [mk,hk,t]=OVR[ck];const m=p?p[mk]:null;
+  const has=(t==="money")?num(m)!==null:!!(m!==null&&m!==undefined&&String(m).trim()!=="");
+  const hv=hojaVal(p,hk);
+  return {mk,hk,t,has,hv,val:has?m:hv};}
+function ovrTag(o){
+  if(o.has)return `<i class="mtag man" title="Escrito a mano. Manda sobre la hoja maestra.">mano<button type="button" class="ox" data-clrovr="${esc(o.mk)}" title="Volver al dato de la hoja">×</button></i>`;
+  if(o.hv!==null&&o.hv!==undefined&&o.hv!=="")return `<i class="mtag hj" title="Viene de la hoja maestra. Escribe encima para corregirlo aquí.">hoja</i>`;
+  return "";}
 function sheetCell(p,k){
-  const h=shOf(p);
-  if(!h&&p.idHoja&&!SH.loaded)return `<span class="shc m">${SH.err?"Hoja no disponible":"Cargando…"}</span>`;
-  if(!h){
-    switch(k){
-      case "sh.estado":{const o=PPTOM,val=o.includes(p.pptoM)?p.pptoM:o[0];
-        return `<div class="man"><select class="pill t-${tone(val)}" data-k="pptoM" title="${MT}" aria-label="Estatus PPTO (manual)">${o.map(x=>`<option${x===val?" selected":""}>${esc(x)}</option>`).join("")}</select><i class="mtag" title="${MT}">manual</i></div>`;}
-      case "sh.montoApr":return `<div class="man"><label class="money" title="${MT}"><span>$</span><input type="number" min="0" step="any" inputmode="decimal" class="in" data-k="ingresoM" value="${p.ingresoM??""}" placeholder="0" aria-label="Ingreso aprobado (manual)"></label><i class="mtag" title="${MT}">manual</i></div>`;
-      case "sh.fact":{const val=YN.includes(p.factM)?p.factM:"No";
-        return `<div class="man"><select class="pill t-${tone(val)}" data-k="factM" title="${MT}" aria-label="Facturado (manual)">${YN.map(x=>`<option${x===val?" selected":""}>${esc(x)}</option>`).join("")}</select><i class="mtag" title="${MT}">manual</i></div>`;}
-      case "sh.cobrado":return `<div class="man"><label class="money" title="${MT}"><span>$</span><input type="number" min="0" step="any" inputmode="decimal" class="in" data-k="cobradoM" value="${p.cobradoM??""}" placeholder="0" aria-label="Cobrado (manual)"></label><i class="mtag" title="${MT}">manual</i></div>`;
-      case "sh.fechaSol":return `<input type="date" class="in in-date" data-k="fechaSolM" value="${esc(p.fechaSolM||"")}" title="${MT}" aria-label="Fecha de solicitud (manual)">`;
-      default:return `<span class="shc m">${p.idHoja?"ID no encontrado":"Sin enlazar"}</span>`;
-    }
-  }
-  switch(k){
-    case "sh.estado":return `<span class="pill ro t-${h.estado==="Aprobado"?"ok":h.estado==="Rechazado"?"bad":h.estado==="Enviado - Pendiente A. C."?"warn":"idle"}">${esc(h.estado)}</span>`;
-    case "sh.fechaSol":return `<span class="shc">${h.fechaSol?esc(dLabel(h.fechaSol)+" "+h.fechaSol.slice(0,4)):"—"}</span>`;
-    case "sh.montoApr":return `<span class="shc num">${h.montoApr?money(h.montoApr):(h.montoPpto?`<span class="m">${money(h.montoPpto)} cotizado</span>`:"—")}</span>`;
-    case "sh.fact":return `<span class="pill ro t-${h.facturado?"ok":"idle"}">${h.facturado?"Facturado":"No facturado"}</span>`;
-    case "sh.cobrado":{const pend=h.montoApr-h.cobrado;return `<span class="shc num">${h.cobrado?money(h.cobrado):"$0"}${h.facturado&&pend>1?` <small class="warn">debe ${money(pend)}</small>`:""}</span>`;}
-    default:return `<span class="shc">${esc(h[k.slice(3)]||"—")}</span>`;
-  }
+  if(!OVR[k]){const h=shOf(p);return `<span class="shc${h?"":" m"}">${h?esc(h[k.slice(3)]||"—"):(p.idHoja?(SH.loaded?"ID no encontrado":"…"):"—")}</span>`;}
+  const o=ovr(p,k);const lab=esc(k);
+  if(o.t==="money"){
+    const ph=(o.hv!==null&&o.hv!==undefined)?String(Math.round(o.hv)):"0";
+    return `<div class="man"><label class="money"><span>$</span><input type="number" min="0" step="any" inputmode="decimal" class="in${o.has?" ovr":""}" data-k="${esc(o.mk)}" value="${o.has?o.val:""}" placeholder="${esc(ph)}" aria-label="${lab}"></label>${ovrTag(o)}</div>`;}
+  if(o.t==="date")
+    return `<div class="man"><input type="date" class="in in-date${o.has?" ovr":""}" data-k="${esc(o.mk)}" value="${esc(o.has?o.val:(o.hv||""))}" aria-label="${lab}">${ovrTag(o)}</div>`;
+  if(o.t==="text")
+    return `<div class="man"><input class="in${o.has?" ovr":""}" data-k="${esc(o.mk)}" value="${esc(o.has?o.val:"")}" placeholder="${esc(o.hv||"—")}" style="width:140px" aria-label="${lab}">${ovrTag(o)}</div>`;
+  const opts=o.t==="yn"?YN:PPTOM;
+  const first=o.hv!=null&&o.hv!==""?`— hoja: ${o.hv}`:"— sin definir";
+  const val=o.has&&opts.includes(o.val)?o.val:"";
+  return `<div class="man"><select class="pill t-${tone(o.val||"")}" data-k="${esc(o.mk)}" aria-label="${lab}"><option value=""${val?"":" selected"}>${esc(first)}</option>${opts.map(x=>`<option${x===val?" selected":""}>${esc(x)}</option>`).join("")}</select>${ovrTag(o)}</div>`;
 }
-function cierreSteps(p){const h=shOf(p);
+function cierreSteps(p){
+  const est=ovr(p,"sh.estado"),fac=ovr(p,"sh.fact"),cob=ovr(p,"sh.cobrado");
+  const ing=fin(p).ing,c=num(cob.val)||0;
   return [
-   {l:"PPTO enviado al cliente",ok:h?["Enviado - Pendiente A. C.","Aprobado","Rechazado"].includes(h.estado):["Enviado al cliente","Aprobado","Rechazado"].includes(p.pptoM),auto:h?1:0},
-   {l:"PPTO aprobado",ok:h?h.estado==="Aprobado":p.pptoM==="Aprobado",auto:h?1:0},
+   {l:"PPTO enviado al cliente",ok:ENVIADO.has(String(est.val||"")),auto:est.has?0:1},
+   {l:"PPTO aprobado",ok:est.val==="Aprobado",auto:est.has?0:1},
    {l:"ODC recibida",ok:p.odc==="Sí"},
    {l:"Evento ejecutado",ok:isPast(p),auto:1},
-   {l:"Facturado",ok:h?!!h.facturado:p.factM==="Sí",auto:h?1:0},
-   {l:"Cobrado",ok:h?(h.montoApr>0&&h.cobrado>=h.montoApr-1):((num(p.ingresoM)||0)>0&&(num(p.cobradoM)||0)>=(num(p.ingresoM)||0)-1),auto:h?1:0},
+   {l:"Facturado",ok:fac.val==="Sí"||fac.val===true,auto:fac.has?0:1},
+   {l:"Cobrado",ok:ing>0&&c>=ing-1,auto:cob.has?0:1},
    {l:"Cierre administrativo (costos e informe)",ok:p.cierreAdm==="Sí"}];}
 function cierre(p){const st=cierreSteps(p);const d=st.filter(x=>x.ok).length;return {done:d,total:st.length,pct:Math.round(d/st.length*100)};}
 /* Ingreso en $, pérdida al cambiar bolívares a dólares, costos y utilidad real */
 function fin(p){
-  const h=shOf(p);const ing=h?(h.montoApr||0):(num(p.ingresoM)||0);const manual=!h;
+  const o=ovr(p,"sh.montoApr");const ing=num(o.val)||0;const manual=o.has||!shOf(p);
   const pct=num(p.perdidaPct)!==null?num(p.perdidaPct):(num(S.cfg&&S.cfg.perdidaPct)!==null?num(S.cfg.perdidaPct):15);
   const perd=ing*pct/100,neto=ing-perd;
   const cost=num(p.costosReal)!==null?num(p.costosReal):num(p.costosEst);
@@ -693,7 +706,7 @@ function alertsOf(p){
   if(!past){
     if(d!==null&&d<=7&&pr<100)out.push({s:3,t:d<=0?`En curso · avance ${pr}%`:`Faltan ${d} días · avance ${pr}%`});
     else if(d!==null&&d<=21&&pr<60)out.push({s:2,t:`Evento en ${d} días · avance ${pr}%`});
-    if(!p.idHoja&&!num(p.ingresoM)&&(d===null||d<=45))out.push({s:d!==null&&d<=14?2:1,t:"Sin enlazar a la hoja maestra (ID)"});
+    if(!p.idHoja&&num(ovr(p,"sh.montoApr").val)===null&&(d===null||d<=45))out.push({s:d!==null&&d<=14?2:1,t:"Sin enlazar a la hoja maestra (ID)"});
     {const h=shOf(p);if(h&&d!==null&&d<=14&&h.estado!=="Aprobado")out.push({s:3,t:`PPTO ${h.estado.toLowerCase()} a ${Math.max(d,0)} días`});}
     if(p.proxReunion&&p.proxReunion<TODAY)out.push({s:2,t:"Próxima reunión vencida"});
     if(!p.proxReunion&&d!==null&&d<=30)out.push({s:1,t:"Sin próxima reunión"});
@@ -945,7 +958,7 @@ function cellHTML0(c,p){
       return `<div class="pick">${A.map(a=>`<button type="button" class="pk${a.on?" on":""}" data-areatoggle="${esc(a.k)}" title="${esc(a.l)}${a.r?" · "+esc(a.r):""}">${esc(a.ab)}</button>`).join("")}${p.servicio?`<small class="pks" title="${esc(p.servicio)}">${esc(p.servicio)}</small>`:""}</div>`;}
     case "areas":{const A=activeAreas(p);return `<div class="chipsr">${A.length?A.map(a=>`<span class="ach${a.resp?"":" no"}" title="${esc(a.l+" · "+(a.resp||"sin responsable"))}">${esc(a.ab)}</span>`).join(""):`<span class="shc m">Sin áreas</span>`}</div>`;}
     case "arearesp":{const ak=c.key.slice(5),on=areaOn(p,ak),r=areaResp(p,ak),falta=on&&!people(r).length;
-      return `<div class="tagc"><input class="in${on?"":" offarea"}${falta?" faltav":""}" data-k="${k}" data-sug="people" autocomplete="off" value="${esc(r)}" placeholder="${on?"Asignar responsable":"inactiva"}" style="width:140px" aria-label="${esc(c.label)}">${falta?`<span class="faltat">Falta responsable</span>`:""}</div>`;}
+      return `<div class="tagc"><input class="in${on?"":" offarea"}${falta?" faltav":""}" data-k="${k}"${on?' data-sug="people"':" disabled"} autocomplete="off" value="${esc(r)}" placeholder="${on?"Asignar responsable":"servicio inactivo"}" style="width:140px" title="${on?"":"Activa el servicio en «Servicios activos» para asignar responsable"}" aria-label="${esc(c.label)}">${falta?`<span class="faltat">Falta responsable</span>`:""}</div>`;}
     case "cierre":{const c2=cierre(p);return `<span class="shc num${c2.done===c2.total?" okv":""}">${c2.done}/${c2.total}</span>`;}
     case "nextent":return nextEntHTML(p);
     case "hoja":{const h=shOf(p);return `<div class="hoja"><input class="in" data-k="${k}" value="${esc(v??"")}" placeholder="KAC-26…" style="width:118px" list="dl-hoja" aria-label="ID hoja maestra"><small class="${p.idHoja&&SH.loaded&&!h?"bad":""}">${h?esc(h.cliente+" · "+h.proyecto):p.idHoja?(SH.loaded?"No encontrado":"…"):"Sin enlazar"}</small></div>`;}
@@ -985,19 +998,22 @@ function renderTable(){
 }
 function patchRow(id){
   const tr=$("#gridwrap").querySelector(`tr[data-id="${CSS.escape(id)}"]`);const p=S.projects.get(id);if(!tr||!p)return;
+  const LIVE=["provst","calc","fin","cierre","sheet","arearesp","nextent","areapick","estado","tags","people"];
+  const live=new Set();
+  for(const c of colsVisible()){
+    if(!LIVE.includes(c.type))continue;
+    const td=tr.querySelector(`td[data-c="${CSS.escape(c.key)}"]`);
+    if(!td)continue;
+    if(document.activeElement&&td.contains(document.activeElement)){live.add(td);continue;}
+    td.innerHTML=cellHTML(c,p);live.add(td);}
   tr.querySelectorAll("[data-k]").forEach(el=>{
+    const td=el.closest("td");if(td&&live.has(td))return;
     if(el!==document.activeElement){const v=getVal(p,el.dataset.k);
       if(el.tagName==="SELECT"){if(v&&[...el.options].some(o=>o.value===v))el.value=v;}
       else el.value=v??"";}
     if(el.tagName==="SELECT")el.className="pill t-"+tone(el.value);
     if(el.dataset.k==="proxReunion")el.classList.toggle("late",!!(el.value&&el.value<TODAY&&!isPast(p)));
   });
-  const LIVE=["provst","calc","fin","cierre","sheet","arearesp","nextent","areapick","estado","tags","people"];
-  for(const c of colsVisible()){
-    if(!LIVE.includes(c.type))continue;
-    const td=tr.querySelector(`td[data-c="${CSS.escape(c.key)}"]`);
-    if(!td||(document.activeElement&&td.contains(document.activeElement)))continue;
-    const nu=cellHTML(c,p);if(td.innerHTML!==nu)td.innerHTML=nu;}
   tr.querySelector(".ring").outerHTML=ringHTML(p);
   tr.querySelector(".meta").innerHTML=metaHTML(p);
   const u=tr.querySelector("[data-util]");if(u){u.innerHTML=utilHTML(p);u.className=utilClass(p);}
@@ -1187,7 +1203,7 @@ function renderDrawer(){
       <label class="df full"><span>Detalle del estatus${p.estatusFecha?` <small>· actualizado ${whenLabel(p.estatusFecha)}</small>`:""}</span><textarea class="in ta" data-k="estatusActual" rows="3" placeholder="En qué va el proyecto, qué falta, qué bloquea…"${ro}>${esc(p.estatusActual||"")}</textarea></label>
     </section>
     <section><h3>Fechas clave</h3>
-      <div class="dg">${h?"":drawerField("Fecha de solicitud (manual)","fechaSolM","date")}${drawerField("Montaje","fechaMontaje","date")}${drawerField("Evento desde","fechaInicio","date")}${drawerField("Evento hasta","fechaFin","date")}</div>${h&&h.fechaSol?`<p class="note">Solicitud registrada en la hoja maestra: ${esc(dLabel(h.fechaSol))} ${esc(h.fechaSol.slice(0,4))}.</p>`:""}
+      <div class="dg">${drawerField("Fecha de solicitud","fechaSolM","date")}${drawerField("Montaje","fechaMontaje","date")}${drawerField("Evento desde","fechaInicio","date")}${drawerField("Evento hasta","fechaFin","date")}</div>${h&&h.fechaSol?`<p class="note">Solicitud registrada en la hoja maestra: ${esc(dLabel(h.fechaSol))} ${esc(h.fechaSol.slice(0,4))}.</p>`:""}
     </section>
     <section id="drReu"><h3>Reuniones</h3>
       <div class="dg">${drawerField("Próxima reunión","proxReunion","date")}${drawerField("Tema / objetivo","temaReunion","text")}${drawerField("Última reunión","ultReunion","date")}</div>
@@ -1199,24 +1215,24 @@ function renderDrawer(){
       <form class="entf" id="entForm"><input class="in" id="entT" list="dl-ent" placeholder="Entregable (ej. Render / Look & Feel)" required${ro}><input class="in in-date" id="entF" type="date"${ro}><input class="in" id="entR" data-sug="people" autocomplete="off" placeholder="Responsable"${ro}><button class="btn pri sm" type="submit"${ro}>Agregar</button></form>
       <datalist id="dl-ent">${ENT_SUG.map(s=>`<option value="${esc(s)}">`).join("")}</datalist>
     </section>
-    <section><h3>Áreas de servicio y responsables</h3><p class="note">Activa las áreas que participan en el proyecto y asigna quién responde por cada una.</p><div class="areas-grid">${AREAS.map(([k,l])=>`<label class="ar ${areaOn(p,k)?"on":""}"><input type="checkbox" data-area="${k}" ${areaOn(p,k)?"checked":""}${ro}><span class="arl">${l}</span><input class="in arr" data-arearesp="${k}" data-sug="people" autocomplete="off" value="${esc(areaResp(p,k))}" placeholder="${areaOn(p,k)?"Responsable":"Inactiva"}"${ro}></label>`).join("")}</div>
+    <section><h3>Áreas de servicio y responsables</h3><p class="note">Activa las áreas que participan en el proyecto y asigna quién responde por cada una.</p><div class="areas-grid">${AREAS.map(([k,l])=>`<label class="ar ${areaOn(p,k)?"on":""}"><input type="checkbox" data-area="${k}" ${areaOn(p,k)?"checked":""}${ro}><span class="arl">${l}</span><input class="in arr" data-arearesp="${k}"${areaOn(p,k)?' data-sug="people"':" disabled"} autocomplete="off" value="${esc(areaResp(p,k))}" placeholder="${areaOn(p,k)?"Responsable":"Servicio inactivo"}"${ro}></label>`).join("")}</div>
       <div class="dg" style="margin-top:8px">${drawerField("Responsable administrativo (cierre)","respAdm","people")}</div></section>
     <section><h3>Pasos operativos <small>proveedores: ${provState(p).txt.toLowerCase()}</small></h3><div class="dg">${[["venue","Venue"],["concepto","Concepto"],["distribucion","Distribución"],["lookfeel","Look & Feel y render"],["pptoEjecEstado","PPTO de ejecución"]].map(([k,l])=>drawerField(l,k,"step")).join("")}${drawerField("Prov. pantalla · sonido · luces · hierros","provTecnico","text")}${drawerField("Prov. impresión · corpóreos · MDF","provImpresion","text")}</div></section>
     <section><h3>Números del proyecto</h3>
       <div class="fintab">
-        <div><span>Ingreso aprobado ${F.manual?"(manual)":"(hoja)"}</span><b>${F.ing?money(F.ing):"—"}</b></div>
+        <div><span>Ingreso aprobado ${F.manual?"(a mano)":"(hoja)"}</span><b>${F.ing?money(F.ing):"—"}</b></div>
         <div><span>Pérdida por cambio a Bs (${Math.round(F.pct)}%)</span><b class="tbad">${F.ing?"-"+money(F.perd):"—"}</b></div>
         <div><span>Ingreso neto</span><b>${F.ing?money(F.neto):"—"}</b></div>
         <div><span>Costos (${p.costosReal!=null&&p.costosReal!==""?"reales":"estimados"})</span><b>${F.cost!==null?money(F.cost):"—"}</b></div>
         <div><span>Utilidad real</span><b class="${F.util!==null?(F.util>=0?"tok":"tbad"):""}">${F.util!==null?money(F.util):"—"}</b></div>
         <div><span>Margen sobre ingreso</span><b>${F.mg!==null?Math.round(F.mg)+"%":"—"}</b></div>
       </div>
-      <div class="dg">${h?"":drawerField("Ingreso aprobado (manual)","ingresoM","money")}${drawerField("% pérdida por cambio","perdidaPct","pct")}${drawerField("Costos estimados","costosEst","money")}${drawerField("Costos reales","costosReal","money")}</div>
+      <div class="dg">${drawerField("Ingreso aprobado","ingresoM","money")}${drawerField("% pérdida por cambio","perdidaPct","pct")}${drawerField("Costos estimados","costosEst","money")}${drawerField("Costos reales","costosReal","money")}</div>
       <p class="note">Si dejas el % vacío se usa el general (${Math.round(S.cfg.perdidaPct)}%). Los costos reales mandan sobre los estimados.</p>
     </section>
     <section><h3>Cierre administrativo y comercial <small>${CI.done}/${CI.total}</small></h3>
       <ul class="ents">${cierreSteps(p).map(x=>`<li class="${x.ok?"ok":""}"><span class="ck ${x.ok?"on":""}">${x.ok?"✓":""}</span><span class="et">${esc(x.l)}<small>${x.auto?"automático · hoja maestra o fecha del evento":"se marca aquí"}</small></span></li>`).join("")}</ul>
-      <div class="dg">${h?"":drawerField("Estatus PPTO (manual)","pptoM","sel",PPTOM)+drawerField("Facturado (manual)","factM","yn")+drawerField("Cobrado (manual)","cobradoM","money")}${drawerField("ODC recibida","odc","yn")}${drawerField("Cierre administrativo","cierreAdm","yn")}</div>
+      <div class="dg">${drawerField("Estatus PPTO","pptoM","sel",["",...PPTOM])}${drawerField("Facturado","factM","sel",["",...YN])}${drawerField("Cobrado","cobradoM","money")}${drawerField("ODC recibida","odc","yn")}${drawerField("Cierre administrativo","cierreAdm","yn")}</div>\n      <p class="note">Si dejas un campo vacío se usa el dato de la hoja maestra; lo que escribas manda sobre ella.</p>
     </section>
     <section><h3>Bitácora</h3>
       <form class="bitf" id="bitForm"><textarea class="in ta" id="bitT" rows="2" placeholder="Acuerdos de la reunión, cambios, pendientes…" required${ro}></textarea><button class="btn pri sm" type="submit"${ro}>Guardar nota</button></form>
@@ -1416,6 +1432,8 @@ grid.addEventListener("change",e=>{
 grid.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending&&!inGrid()){S.pending=false;renderFilters();renderTable();}},0));
 grid.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input.in")){e.target.blur();}});
 grid.addEventListener("click",e=>{
+  const cl=e.target.closest("[data-clrovr]");
+  if(cl){const id=cl.closest("tr[data-id]").dataset.id;save(id,cl.dataset.clrovr,null);cl.blur();patchRow(id);renderSummary();return;}
   const t=e.target.closest("[data-areatoggle]");
   if(t){const id=t.closest("tr[data-id]").dataset.id;const ak=t.dataset.areatoggle;const p=S.projects.get(id);
     save(id,"area."+ak,{on:!areaOn(p,ak),resp:areaResp(p,ak)});
@@ -1449,7 +1467,7 @@ function setView(v){S.view=v;$("#tabAgenda").setAttribute("aria-pressed",v==="ag
 $("#tabAgenda").onclick=()=>setView("agenda");$("#tabTabla").onclick=()=>setView("tabla");$("#tabInd").onclick=()=>setView("ind");$("#tabEq").onclick=()=>setView("eq");$("#tabProv").onclick=()=>setView("prov");
 $("#grpToggle").querySelectorAll("button").forEach(b=>{b.setAttribute("aria-pressed",!S.hidden[b.dataset.g]);b.onclick=()=>{S.hidden[b.dataset.g]=!S.hidden[b.dataset.g];b.setAttribute("aria-pressed",!S.hidden[b.dataset.g]);try{localStorage.setItem("kc-hidden",JSON.stringify(S.hidden));}catch(e){}renderTable();};});
 
-function newDoc(){return {proyecto:"",evento:"",marca:S.f.marca!=="all"?S.f.marca:"",servicio:"",idHoja:"",areas:{},perdidaPct:null,costosReal:null,cierreAdm:"No",estado:"Pendiente",pptoM:"Por elaborar",ingresoM:null,factM:"No",cobradoM:null,fechaSolM:null,fase:"Planificación",estatusActual:"",estatusFecha:null,entregables:[],bitacora:[],temaReunion:"",fechaMontaje:null,fechaInicio:null,fechaFin:null,respOp:"",respCre:"",respDis:"",respAdm:"",venue:"Pendiente",concepto:"Pendiente",distribucion:"Pendiente",lookfeel:"Pendiente",pptoEjecEstado:"Pendiente",provTecnico:"",provImpresion:"",ultReunion:null,proxReunion:null,pptoCliente:"Por enviar",odc:"No",factura:"No",montoFactura:null,costosEst:null,notas:"",custom:{},createdAt:new Date().toISOString()};}
+function newDoc(){return {proyecto:"",evento:"",marca:S.f.marca!=="all"?S.f.marca:"",servicio:"",idHoja:"",areas:{},perdidaPct:null,costosReal:null,cierreAdm:"No",estado:"Pendiente",pptoM:"",ingresoM:null,factM:"",cobradoM:null,fechaSolM:null,canalExtM:"",canalIntM:"",fase:"Planificación",estatusActual:"",estatusFecha:null,entregables:[],bitacora:[],temaReunion:"",fechaMontaje:null,fechaInicio:null,fechaFin:null,respOp:"",respCre:"",respDis:"",respAdm:"",venue:"Pendiente",concepto:"Pendiente",distribucion:"Pendiente",lookfeel:"Pendiente",pptoEjecEstado:"Pendiente",provTecnico:"",provImpresion:"",ultReunion:null,proxReunion:null,pptoCliente:"Por enviar",odc:"No",factura:"No",montoFactura:null,costosEst:null,notas:"",custom:{},createdAt:new Date().toISOString()};}
 function createProject(vals){
   if(S.ro)return null;
   const id="p"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
