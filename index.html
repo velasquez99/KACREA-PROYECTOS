@@ -328,6 +328,11 @@ body.dopen{overflow:hidden}
 .p-pr{display:flex;align-items:center;gap:6px}.p-pr small{font:500 11px var(--mono);color:var(--muted)}
 .p-h3{font:600 13px var(--display);margin:6px 0 0;color:var(--warn)}.p-chips{display:flex;flex-wrap:wrap;gap:6px}
 .p-chip{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:4px 10px;font-size:12px;cursor:pointer}.p-chip:hover{border-color:var(--accent);color:var(--accent)}
+.pick{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;width:220px;align-items:center}
+.pk{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:6px;padding:3px 7px;font:600 10.5px var(--mono);cursor:pointer}
+.pk:hover{border-color:var(--accent);color:var(--accent)}
+.pk.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pks{flex-basis:100%;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .areas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
 .ar{display:grid;grid-template-columns:auto 1fr;gap:6px 8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}
 .ar.on{border-color:var(--accent);background:var(--accent-soft)}
@@ -484,14 +489,13 @@ const COLS=[
  {key:"fechaMontaje",label:"Montaje",type:"date",group:"gen"},
  {key:"evento",label:"Evento",type:"text",group:"gen",w:190},
  {key:"marca",label:"Marca",type:"text",group:"gen",list:1,w:140},
- {key:"servicio",label:"Servicio",type:"text",group:"gen",w:230},
+ {key:"serviciosPick",label:"Servicios activos",type:"areapick",group:"gen"},
  {key:"sh.canalExt",label:"Solicitado por · hoja",type:"sheet",group:"gen"},
  {key:"sh.canalInt",label:"Recibido por · hoja",type:"sheet",group:"gen"},
  {key:"fase",label:"Fase",type:"sel",opts:FASES_C,group:"eq0"},
  {key:"estatusActual",label:"Estatus actual",type:"text",group:"eq0",w:240},
  {key:"nextEnt",label:"Próximo entregable",type:"nextent",group:"eq0"},
  {key:"proxReunion",label:"Próxima reunión",type:"date",group:"eq0"},
- {key:"areasChips",label:"Áreas activas",type:"areas",group:"eq"},
  {key:"area.audiovisual",label:"Audiovisual",type:"arearesp",group:"eq"},
  {key:"area.diseno",label:"Diseño gráfico",type:"arearesp",group:"eq"},
  {key:"area.render",label:"Render",type:"arearesp",group:"eq"},
@@ -555,6 +559,7 @@ const isPast=p=>!!endOf(p)&&endOf(p)<TODAY;
 function getVal(p,k){if(k.startsWith("sh."))return shVal(p,k);
   if(k.startsWith("area."))return areaResp(p,k.slice(5));
   if(k.startsWith("fin."))return fin(p)[k.slice(4)];
+  if(k==="serviciosPick")return activeAreas(p).map(a=>a.l).join(", ");
   if(k==="areasChips")return activeAreas(p).map(a=>a.l+(areaResp(p,a.k)?" ("+areaResp(p,a.k)+")":"")).join(", ");
   if(k==="cierreProg"){const c=cierre(p);return c.done+"/"+c.total;}if(k==="tipoServicio"&&(!p.tipoServicio||p.tipoServicio==="—"))return p.tipoServicio==="—"?"—":inferTipo(p);return k.startsWith("custom.")?(p.custom||{})[k.slice(7)]:p[k];}
 function tone(v){return {"Cierre":"ok","Montaje / Ejecución":"bad","Producción":"warn","Pre-producción":"warn","Listo":"ok","Aprobado":"ok","Sí":"ok","N/A":"idle","En proceso":"warn","Por aprobar":"warn","Rechazado":"bad"}[v]||"idle";}
@@ -740,6 +745,8 @@ function cellHTML0(c,p){
     case "sheet":return sheetCell(p,c.key);
     case "pct":return `<label class="money"><input type="number" min="0" max="100" step="any" inputmode="decimal" class="in" data-k="${k}" value="${p.perdidaPct??""}" placeholder="${Math.round(fin(p).pct)}" aria-label="${esc(c.label)}"><span>%</span></label>`;
     case "fin":{const f=fin(p);const v2=f[c.key.slice(4)];return `<span class="shc num${c.key==="fin.perd"&&v2?" warnv":""}">${f.ing?money(c.key==="fin.perd"?-v2:v2):"—"}</span>`;}
+    case "areapick":{const A=AREAS.map(([k,l,ab])=>({k,l,ab,on:areaOn(p,k),r:areaResp(p,k)}));
+      return `<div class="pick">${A.map(a=>`<button type="button" class="pk${a.on?" on":""}" data-areatoggle="${esc(a.k)}" title="${esc(a.l)}${a.r?" · "+esc(a.r):""}">${esc(a.ab)}</button>`).join("")}${p.servicio?`<small class="pks" title="${esc(p.servicio)}">${esc(p.servicio)}</small>`:""}</div>`;}
     case "areas":{const A=activeAreas(p);return `<div class="chipsr">${A.length?A.map(a=>`<span class="ach${a.resp?"":" no"}" title="${esc(a.l+" · "+(a.resp||"sin responsable"))}">${esc(a.ab)}</span>`).join(""):`<span class="shc m">Sin áreas</span>`}</div>`;}
     case "arearesp":{const ak=c.key.slice(5);const on=areaOn(p,ak);
       return `<input class="in${on?"":" offarea"}" data-k="${k}" value="${esc(areaResp(p,ak))}" placeholder="${on?"Responsable":"inactiva"}" style="width:140px" list="dl-people" aria-label="${esc(c.label)}">`;}
@@ -965,7 +972,7 @@ function renderDrawer(){
       <label class="df full"><span>Nombre del proyecto</span><input class="in" data-k="proyecto" value="${esc(p.proyecto||"")}"${ro}></label>
       ${drawerField("Marca / cliente","marca","text")}${drawerField("Evento / ocasión","evento","text")}
       <label class="df"><span>ID hoja maestra</span><input class="in" data-k="idHoja" list="dl-hoja" value="${esc(p.idHoja||"")}" placeholder="KAC-26…"${ro}></label>
-      ${drawerField("Servicio","servicio","text")}
+      <label class="df full"><span>Servicio (texto de la lista original)</span><input class="in" data-k="servicio" value="${esc(p.servicio||"")}" placeholder="—"${ro}></label>
     </div></section>
     <section><h3>Dónde estamos</h3>
       <div class="dg">${drawerField("Fase","fase","sel",FASES)}</div>
@@ -1039,7 +1046,7 @@ function initDrawer(){
   dr.addEventListener("submit",e=>{e.preventDefault();
     if(e.target.id==="newForm"){const g=k=>{const x=$("#nf_"+k);return x?x.value.trim():"";};
       const name=g("proyecto");if(!name){$("#nf_proyecto").focus();return;}
-      const vals={proyecto:name,marca:g("marca"),evento:g("evento"),servicio:g("servicio"),idHoja:g("idHoja").toUpperCase(),fase:g("fase")||"Planificación",
+      const vals={proyecto:name,marca:g("marca"),evento:g("evento"),idHoja:g("idHoja").toUpperCase(),fase:g("fase")||"Planificación",
         fechaInicio:g("fechaInicio")||null,fechaFin:g("fechaFin")||null,proxReunion:g("proxReunion")||null,areas:Object.fromEntries(AREAS.filter(([k])=>{const c=$("#nfa_"+k);return c&&c.checked;}).map(([k])=>[k,{on:true,resp:""}])),createdAt:new Date().toISOString()};
       const id=createProject(vals);if(id){toast(`“${name}” creado`);openDrawer(id);}return;}
     const p=S.projects.get(D.id);if(!p)return;
@@ -1192,6 +1199,10 @@ grid.addEventListener("change",e=>{
 grid.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending&&!inGrid()){S.pending=false;renderFilters();renderTable();}},0));
 grid.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input.in")){e.target.blur();}});
 grid.addEventListener("click",e=>{
+  const t=e.target.closest("[data-areatoggle]");
+  if(t){const id=t.closest("tr[data-id]").dataset.id;const ak=t.dataset.areatoggle;const p=S.projects.get(id);
+    save(id,"area."+ak,{on:!areaOn(p,ak),resp:areaResp(p,ak)});
+    t.classList.toggle("on");patchRow(id);renderSummary();S.pending=true;return;}
   const b=e.target.closest("[data-del]");if(!b)return;
   const id=b.closest("tr").dataset.id;
   if(!b.classList.contains("armed")){b.classList.add("armed");b.textContent="¿Confirmar?";setTimeout(()=>{if(b.isConnected){b.classList.remove("armed");b.textContent="Eliminar";}},3000);return;}
@@ -1238,7 +1249,6 @@ function openNew(){
       <label class="df full"><span>Nombre del proyecto *</span><input class="in" id="nf_proyecto" required placeholder="Ej. Lanzamiento PAN Integral – Evento"></label>
       <label class="df"><span>Marca / cliente</span><input class="in" id="nf_marca" list="dl-nfmarca" placeholder="Ej. Pepsi"></label>
       <label class="df"><span>Evento / ocasión</span><input class="in" id="nf_evento" placeholder="Ej. Encendido de Bella Vista"></label>
-      <label class="df full"><span>Servicio</span><input class="in" id="nf_servicio" placeholder="Ej. Conceptualización y producción"></label>
       <label class="df"><span>ID hoja maestra</span><input class="in" id="nf_idHoja" list="dl-hoja" placeholder="KAC-26… (si ya existe)"></label>
       <label class="df"><span>Fase</span><select class="pill t-idle" id="nf_fase">${FASES.map(f=>`<option>${f}</option>`).join("")}</select></label>
     </div><datalist id="dl-nfmarca">${marcas.map(m=>`<option value="${esc(m)}">`).join("")}</datalist></section>
