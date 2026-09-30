@@ -124,11 +124,11 @@ tr.r.flash th,tr.r.flash td{animation:fl 1.6s ease}
 @keyframes fl{0%,40%{background:var(--accent-soft)}}
 @media (prefers-reduced-motion:reduce){tr.r.flash th,tr.r.flash td{animation:none;background:var(--accent-soft)}}
 
-.pj{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;padding:8px 10px;width:290px}
+.pj{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:8px 10px;width:350px}
 .ring{width:34px;height:34px;border-radius:50%;background:conic-gradient(var(--rc,var(--accent)) calc(var(--p)*1%),var(--line-2) 0);display:grid;place-items:center}
 .ring b{width:26px;height:26px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:500 10px var(--mono);font-variant-numeric:tabular-nums}
 .pj .in.name{font-weight:600;font-size:14px;width:100%}
-.meta{font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:0 6px;margin-top:1px}
+.meta{font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:0 6px;margin-top:1px;max-width:255px}
 .tag{font:500 10.5px var(--mono);padding:1px 6px;border-radius:99px;white-space:nowrap}
 .tag.s3{background:var(--bad-bg);color:var(--bad)} .tag.s2{background:var(--warn-bg);color:var(--warn)} .tag.s1{background:var(--idle-bg);color:var(--idle)}
 
@@ -328,6 +328,24 @@ body.dopen{overflow:hidden}
 .p-pr{display:flex;align-items:center;gap:6px}.p-pr small{font:500 11px var(--mono);color:var(--muted)}
 .p-h3{font:600 13px var(--display);margin:6px 0 0;color:var(--warn)}.p-chips{display:flex;flex-wrap:wrap;gap:6px}
 .p-chip{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:4px 10px;font-size:12px;cursor:pointer}.p-chip:hover{border-color:var(--accent);color:var(--accent)}
+.areas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.ar{display:grid;grid-template-columns:auto 1fr;gap:6px 8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}
+.ar.on{border-color:var(--accent);background:var(--accent-soft)}
+.ar input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent)}
+.arl{font-weight:600;font-size:13px}
+.ar .arr{grid-column:1/-1;width:100%;border-color:var(--line);background:var(--surface)}
+.chipsr{display:flex;flex-wrap:wrap;gap:3px;padding:6px 8px;max-width:170px}
+.ach{font:600 10px var(--mono);background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:2px 5px}
+.ach.no{background:var(--warn-bg);color:var(--warn)}
+.in.offarea{color:var(--muted);background:repeating-linear-gradient(135deg,transparent,transparent 5px,var(--line-2) 5px,var(--line-2) 6px)}
+.shc.warnv{color:var(--warn)} .shc.okv{color:var(--ok);font-weight:600}
+.ck{width:18px;height:18px;border-radius:5px;border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--ok)}
+.ck.on{background:var(--ok-bg);border-color:var(--ok)}
+.fintab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line-2);border:1px solid var(--line-2);border-radius:10px;overflow:hidden}
+.fintab div{background:var(--surface);padding:8px 10px;display:flex;flex-direction:column}
+.fintab span{font:500 10px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fintab b{font:600 15px var(--mono);font-variant-numeric:tabular-nums}
+.tok{color:var(--ok)}
 .banner{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:13px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;z-index:20;box-shadow:var(--shadow)}
 </style>
@@ -406,6 +424,7 @@ body{margin:0}img{max-width:100%}[hidden]{display:none!important}
       <button data-g="op" aria-pressed="true">Operativo</button>
       <button data-g="adm" aria-pressed="true">Administrativo</button>
     </div>
+    <label class="field" title="Se aplica a los proyectos que no tengan su propio porcentaje"><span style="font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Pérdida cambiaria</span><input id="cfgPerd" type="number" min="0" max="100" step="any" style="width:52px;text-align:right">%</label>
     <button class="btn" id="btnCsv" title="Descarga todos los proyectos en un archivo que abre Excel">Descargar respaldo</button>
     <button class="btn" id="btnCol">+ Columna</button>
     <button class="btn pri" id="btnAdd">+ Proyecto</button>
@@ -452,7 +471,7 @@ const PPTO=["Por enviar","Por aprobar","Aprobado","Rechazado"];
 const YN=["No","Sí"];
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const MES3=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-const GROUPS={eq0:"Gestión del día",gen:"Proyecto",eq:"Responsables",op:"Seguimiento operativo",adm:"Administrativo · desde la hoja maestra",nt:""};
+const GROUPS={eq0:"Gestión del día",gen:"Proyecto",eq:"Áreas y responsables",op:"Seguimiento operativo",adm:"Administrativo · comercial · cierre",nt:""};
 const FASES_C=["Planificación","Conceptualización","Pre-producción","Producción","Montaje / Ejecución","Cierre"];
 const TIPOS=["—","Stand","Activación","Evento","Audiovisual","Experiencia de marca","Otro"];
 function inferTipo(p){const t=((p.proyecto||"")+" "+(p.servicio||"")+" "+(p.evento||"")).toLowerCase();
@@ -472,10 +491,14 @@ const COLS=[
  {key:"estatusActual",label:"Estatus actual",type:"text",group:"eq0",w:240},
  {key:"nextEnt",label:"Próximo entregable",type:"nextent",group:"eq0"},
  {key:"proxReunion",label:"Próxima reunión",type:"date",group:"eq0"},
- {key:"respOp",label:"1 · Operativo",type:"people",group:"eq"},
- {key:"respCre",label:"2 · Creativo",type:"people",group:"eq"},
- {key:"respDis",label:"3 · Diseño",type:"people",group:"eq"},
- {key:"respAdm",label:"4 · Administrativo",type:"people",group:"eq"},
+ {key:"areasChips",label:"Áreas activas",type:"areas",group:"eq"},
+ {key:"area.audiovisual",label:"Audiovisual",type:"arearesp",group:"eq"},
+ {key:"area.diseno",label:"Diseño gráfico",type:"arearesp",group:"eq"},
+ {key:"area.render",label:"Render",type:"arearesp",group:"eq"},
+ {key:"area.concepto",label:"Concepto y estrategia",type:"arearesp",group:"eq"},
+ {key:"area.produccion",label:"Producción",type:"arearesp",group:"eq"},
+ {key:"area.digital",label:"Digital",type:"arearesp",group:"eq"},
+ {key:"respAdm",label:"Resp. administrativo",type:"people",group:"eq"},
  {key:"venue",label:"Venue",type:"step",group:"op"},
  {key:"concepto",label:"Concepto",type:"step",group:"op"},
  {key:"distribucion",label:"Distribución de espacios",type:"step",group:"op"},
@@ -486,20 +509,32 @@ const COLS=[
  {key:"ultReunion",label:"Última reunión",type:"date",group:"op"},
  {key:"temaReunion",label:"Tema próxima reunión",type:"text",group:"op",w:180},
  {key:"sh.estado",label:"Estatus PPTO · hoja",type:"sheet",group:"adm"},
- {key:"sh.montoApr",label:"Monto aprobado · hoja",type:"sheet",group:"adm"},
+ {key:"sh.montoApr",label:"Ingreso aprobado · hoja",type:"sheet",group:"adm"},
+ {key:"perdidaPct",label:"% pérdida por cambio",type:"pct",group:"adm"},
+ {key:"fin.perd",label:"Pérdida cambiaria",type:"fin",group:"adm"},
+ {key:"fin.neto",label:"Ingreso neto",type:"fin",group:"adm"},
+ {key:"costosEst",label:"Costos estimados",type:"money",group:"adm"},
+ {key:"costosReal",label:"Costos reales",type:"money",group:"adm"},
+ {key:"utilidad",label:"Utilidad real",type:"calc",group:"adm"},
  {key:"sh.fact",label:"Facturación · hoja",type:"sheet",group:"adm"},
  {key:"sh.cobrado",label:"Cobrado · hoja",type:"sheet",group:"adm"},
  {key:"odc",label:"ODC",type:"yn",group:"adm"},
- {key:"costosEst",label:"Costos estimados",type:"money",group:"adm"},
- {key:"utilidad",label:"Utilidad neta estimada",type:"calc",group:"adm"},
+ {key:"cierreAdm",label:"Cierre administrativo",type:"yn",group:"adm"},
+ {key:"cierreProg",label:"Avance de cierre",type:"cierre",group:"adm"},
  {key:"notas",label:"Notas",type:"text",group:"nt",w:240}
 ];
-const ROLES=[["respOp","Operativo","Op"],["respCre","Creativo","Cre"],["respDis","Diseño","Dis"],["respAdm","Administrativo","Adm"]];
+const AREAS=[["audiovisual","Audiovisual","AV"],["diseno","Diseño gráfico","DG"],["render","Render","RE"],["concepto","Concepto y estrategia","CE"],["produccion","Producción","PR"],["digital","Digital","DI"]];
+const LEGACY={produccion:"respOp",concepto:"respCre",diseno:"respDis"};
+const areaObj=p=>(p&&p.areas&&typeof p.areas==="object")?p.areas:{};
+function areaOn(p,k){const a=areaObj(p)[k];if(a&&typeof a==="object")return !!a.on;const l=LEGACY[k];return l?!!String(p[l]||"").trim():false;}
+function areaResp(p,k){const a=areaObj(p)[k];if(a&&typeof a==="object"&&a.resp!==undefined)return a.resp||"";const l=LEGACY[k];return l?(p[l]||""):"";}
+const activeAreas=p=>AREAS.filter(([k])=>areaOn(p,k)).map(([k,l,ab])=>({k,l,ab,resp:areaResp(p,k)}));
+const teamReady=p=>{const A=activeAreas(p);return A.length>0&&A.every(a=>people(a.resp).length>0);};
 const people=v=>String(v||"").split(/[,;\/]| y /).map(x=>x.trim()).filter(Boolean);
-const teamOf=p=>{const o=[];for(const[k,,ab]of ROLES)for(const n of people(p[k]))o.push({n,k,ab});return o;};
+const teamOf=p=>{const o=[];for(const a of activeAreas(p))for(const n of people(a.resp))o.push({n,k:a.k,ab:a.ab,l:a.l});for(const n of people(p.respAdm))o.push({n,k:"respAdm",ab:"AD",l:"Administrativo"});return o;};
 const STEPS=[["team","team"],["venue","s"],["concepto","s"],["distribucion","s"],["lookfeel","s"],["pptoEjecEstado","s"],["provTecnico","t"],["provImpresion","t"]];
 
-const S={projects:new Map(),custom:[],db:null,loaded:false,offline:false,view:"agenda",
+const S={cfg:{perdidaPct:15},projects:new Map(),custom:[],db:null,loaded:false,offline:false,view:"agenda",
   f:{q:"",mes:"all",marca:"all",resp:"all",alerts:false,past:true},hidden:{eq:false,op:false,adm:false},pending:false,saving:0,focusNew:null};
 try{const h=JSON.parse(localStorage.getItem("kc-hidden")||"null");if(h)S.hidden=Object.assign(S.hidden,h);}catch(e){}
 
@@ -517,9 +552,13 @@ function rangeLabel(p){const a=p.fechaInicio,b=p.fechaFin;if(!a)return "Fecha po
   const[,ma,da]=a.split("-"),[,mb,db]=b.split("-");return ma===mb?`${da}–${db} ${MES3[+ma-1]}`:`${dLabel(a)} – ${dLabel(b)}`;}
 const endOf=p=>p.fechaFin||p.fechaInicio;
 const isPast=p=>!!endOf(p)&&endOf(p)<TODAY;
-function getVal(p,k){if(k.startsWith("sh."))return shVal(p,k);if(k==="tipoServicio"&&(!p.tipoServicio||p.tipoServicio==="—"))return p.tipoServicio==="—"?"—":inferTipo(p);return k.startsWith("custom.")?(p.custom||{})[k.slice(7)]:p[k];}
+function getVal(p,k){if(k.startsWith("sh."))return shVal(p,k);
+  if(k.startsWith("area."))return areaResp(p,k.slice(5));
+  if(k.startsWith("fin."))return fin(p)[k.slice(4)];
+  if(k==="areasChips")return activeAreas(p).map(a=>a.l+(areaResp(p,a.k)?" ("+areaResp(p,a.k)+")":"")).join(", ");
+  if(k==="cierreProg"){const c=cierre(p);return c.done+"/"+c.total;}if(k==="tipoServicio"&&(!p.tipoServicio||p.tipoServicio==="—"))return p.tipoServicio==="—"?"—":inferTipo(p);return k.startsWith("custom.")?(p.custom||{})[k.slice(7)]:p[k];}
 function tone(v){return {"Cierre":"ok","Montaje / Ejecución":"bad","Producción":"warn","Pre-producción":"warn","Listo":"ok","Aprobado":"ok","Sí":"ok","N/A":"idle","En proceso":"warn","Por aprobar":"warn","Rechazado":"bad"}[v]||"idle";}
-function progress(p){let d=0;for(const[k,t]of STEPS){const v=p[k];if(t==="team"){if(ROLES.every(([rk])=>people(p[rk]).length))d++;continue;}if(t==="t"?(v&&String(v).trim()):(v==="Listo"||v==="N/A"))d++;}return {done:d,pct:Math.round(d/STEPS.length*100)};}
+function progress(p){let d=0;for(const[k,t]of STEPS){const v=p[k];if(t==="team"){if(teamReady(p))d++;continue;}if(t==="t"?(v&&String(v).trim()):(v==="Listo"||v==="N/A"))d++;}return {done:d,pct:Math.round(d/STEPS.length*100)};}
 /* ---------- Hoja maestra (Google Sheets, solo lectura) ---------- */
 const SHEET_CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vSTPL2nRtCfahaZtNWC2fkEAZRaJ-rwvZl8ZI2_dbilNhfGW34MddrrG72obS50lyis1P8NsMFlGtIs/pub?gid=989528746&single=true&output=csv";
 const SHEET_APPS="https://script.google.com/macros/s/AKfycbze9phxDf-p3J3hHOXTGM_o7dA88GYJhTr6MhqNKiZhf7SkqdT-ZPOF8RwFEjN_1Ure/exec";
@@ -568,7 +607,26 @@ function sheetCell(p,k){
     default:return `<span class="shc">${esc(h[k.slice(3)]||"—")}</span>`;
   }
 }
-function util(p){const h=shOf(p);const m=h&&h.montoApr?h.montoApr:null,c=num(p.costosEst);if(m===null||c===null)return null;return {u:m-c,mg:m?((m-c)/m*100):0};}
+function cierreSteps(p){const h=shOf(p);
+  return [
+   {l:"PPTO enviado al cliente",ok:!!h&&["Enviado - Pendiente A. C.","Aprobado","Rechazado"].includes(h.estado),auto:1},
+   {l:"PPTO aprobado",ok:!!h&&h.estado==="Aprobado",auto:1},
+   {l:"ODC recibida",ok:p.odc==="Sí"},
+   {l:"Evento ejecutado",ok:isPast(p),auto:1},
+   {l:"Facturado",ok:!!h&&h.facturado,auto:1},
+   {l:"Cobrado",ok:!!h&&h.montoApr>0&&h.cobrado>=h.montoApr-1,auto:1},
+   {l:"Cierre administrativo (costos e informe)",ok:p.cierreAdm==="Sí"}];}
+function cierre(p){const st=cierreSteps(p);const d=st.filter(x=>x.ok).length;return {done:d,total:st.length,pct:Math.round(d/st.length*100)};}
+/* Ingreso en $, pérdida al cambiar bolívares a dólares, costos y utilidad real */
+function fin(p){
+  const h=shOf(p);const ing=h?(h.montoApr||0):0;
+  const pct=num(p.perdidaPct)!==null?num(p.perdidaPct):(num(S.cfg&&S.cfg.perdidaPct)!==null?num(S.cfg.perdidaPct):15);
+  const perd=ing*pct/100,neto=ing-perd;
+  const cost=num(p.costosReal)!==null?num(p.costosReal):num(p.costosEst);
+  const util=(ing>0&&cost!==null)?neto-cost:null;
+  return {ing,pct,perd,neto,cost,util,mg:(util!==null&&ing>0)?util/ing*100:null};
+}
+function util(p){const f=fin(p);return f.util===null?null:{u:f.util,mg:f.mg||0};}
 function alertsOf(p){
   const out=[],d=daysTo(p.fechaInicio),pr=progress(p).pct,past=isPast(p);
   if(!past){
@@ -582,8 +640,10 @@ function alertsOf(p){
     for(const e of pendEnts(p)){const w=daysTo(e.f);if(w!==null&&w<0)out.push({s:3,t:`Entregable vencido: ${e.t} (${-w} d)`});else if(w!==null&&w<=2)out.push({s:2,t:`Entregable ${whenLabel(e.f)}: ${e.t}`});}
     if(!hasNextStep(p)&&(d===null||d<=45))out.push({s:2,t:"Sin próxima acción (reunión o entregable)"});
     if(d!==null&&d<=30&&(!p.estatusFecha||-daysTo(p.estatusFecha)>7))out.push({s:1,t:p.estatusFecha?`Estatus sin actualizar hace ${-daysTo(p.estatusFecha)} días`:"Sin estatus actual"});
-    const miss=ROLES.filter(([rk])=>!people(p[rk]).length).map(r=>r[1].toLowerCase());
-    if(miss.length&&(d===null||d<=30))out.push({s:miss.length===4?2:1,t:miss.length===4?"Sin responsables asignados":"Falta responsable "+miss.join(", ")});
+    const AA=activeAreas(p);
+    if(!AA.length&&(d===null||d<=45))out.push({s:2,t:"Sin áreas de servicio activadas"});
+    else{const miss=AA.filter(a=>!people(a.resp).length).map(a=>a.l.toLowerCase());
+      if(miss.length&&(d===null||d<=30))out.push({s:miss.length===AA.length?2:1,t:"Falta responsable de "+miss.join(", ")});}
   }
   const h=shOf(p);
   if(p.idHoja&&SH.loaded&&!h)out.push({s:2,t:`ID ${p.idHoja} no está en la hoja maestra`});
@@ -602,7 +662,7 @@ function filtered(inclPast){
     if(S.f.mes!=="all"&&(p.fechaInicio?p.fechaInicio.slice(0,7):"none")!==S.f.mes)return false;
     if(S.f.marca!=="all"&&(p.marca||"")!==S.f.marca)return false;
     if(S.f.alerts&&!alertsOf(p).length)return false;
-    if(S.f.resp!=="all"){const t=teamOf(p);if(S.f.resp==="__none"?t.length>=4&&ROLES.every(([rk])=>people(p[rk]).length):!t.some(x=>x.n===S.f.resp))return false;}
+    if(S.f.resp!=="all"){const t=teamOf(p);if(S.f.resp==="__none"?teamReady(p):!t.some(x=>x.n===S.f.resp))return false;}
     if(q){const sh=shOf(p)||{};const h=[p.proyecto,p.evento,p.marca,p.idHoja,sh.cliente,sh.proyecto,sh.canalInt,sh.canalExt,p.respOp,p.respCre,p.respDis,p.respAdm,p.provTecnico,p.provImpresion].join(" ").toLowerCase();if(!h.includes(q))return false;}
     return true;
   }));
@@ -643,7 +703,8 @@ function renderSummary(){
   const apr=linked.filter(h=>h.estado==="Aprobado").length;
   const odc=list.filter((p,i)=>hs[i]&&hs[i].estado==="Aprobado"&&p.odc==="Sí").length;
   const mApr=linked.reduce((s,h)=>s+h.montoApr,0),mCob=linked.reduce((s,h)=>s+h.cobrado,0);
-  let uSum=0,mSum=0,uN=0;for(const p of list){const u=util(p);if(u){uSum+=u.u;mSum+=shOf(p).montoApr;uN++;}}
+  let uSum=0,mSum=0,uN=0,perdSum=0,netoSum=0;
+  for(const p of list){const f=fin(p);perdSum+=f.perd;netoSum+=f.neto;const u=util(p);if(u){uSum+=u.u;mSum+=f.ing;uN++;}}
   const AI=agendaItems(filtered(true));const venc=AI.filter(x=>x.d&&x.d<TODAY&&(x.k==="ent"||x.k==="reu")).length;
   const wEnd=isoOf(new Date(monday(TODAY).getTime()+6*DAY));const sem=AI.filter(x=>x.d&&x.d>=TODAY&&x.d<=wEnd).length;
   const k=(l,v,s,extra="")=>`<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span>${extra}<span class="s">${s}</span></div>`;
@@ -653,8 +714,8 @@ function renderSummary(){
     k("PPTO aprobados",`${apr}<span style="font-size:15px;color:var(--muted)">/${n}</span>`,sinId?`${sinId} sin enlazar a la hoja maestra`:"según la hoja maestra")+
     k("Vencidos",`<span class="${venc?"tbad":""}">${venc}</span>`,"entregables y reuniones atrasados")+
     k("Esta semana",sem,`${list.filter(p=>!isPast(p)&&!hasNextStep(p)).length} proyectos sin próxima acción`)+
-    k("Monto aprobado",linked.length?money(mApr):"—",linked.length?`Cobrado ${money(mCob)} · por cobrar ${money(Math.max(0,mApr-mCob))}`:"enlaza los eventos con su ID de la hoja")+
-    "";
+    k("Ingreso neto",linked.length?money(netoSum):"—",linked.length?`Bruto ${money(mApr)} · pérdida cambiaria ${money(perdSum)}`:"enlaza los eventos con su ID de la hoja")+
+    k("Utilidad real est.",uN?money(uSum):"—",uN?`margen ${Math.round(uSum/mSum*100)}% · ${uN} con costos cargados`:"carga los costos de cada proyecto");
   // alerts
   const al=[];for(const p of list)for(const a of alertsOf(p))al.push({p,a});
   al.sort((x,y)=>y.a.s-x.a.s||(x.p.fechaInicio||"9").localeCompare(y.p.fechaInicio||"9"));
@@ -677,6 +738,12 @@ function cellHTML0(c,p){
     case "people":return `<input class="in" data-k="${k}" value="${esc(v??"")}" placeholder="Asignar" style="width:150px" list="dl-people" aria-label="${esc(c.label)}" title="Varias personas: sepáralas con coma">`;
     case "calc":return `<span class="util" data-util>${utilHTML(p)}</span>`;
     case "sheet":return sheetCell(p,c.key);
+    case "pct":return `<label class="money"><input type="number" min="0" max="100" step="any" inputmode="decimal" class="in" data-k="${k}" value="${p.perdidaPct??""}" placeholder="${Math.round(fin(p).pct)}" aria-label="${esc(c.label)}"><span>%</span></label>`;
+    case "fin":{const f=fin(p);const v2=f[c.key.slice(4)];return `<span class="shc num${c.key==="fin.perd"&&v2?" warnv":""}">${f.ing?money(c.key==="fin.perd"?-v2:v2):"—"}</span>`;}
+    case "areas":{const A=activeAreas(p);return `<div class="chipsr">${A.length?A.map(a=>`<span class="ach${a.resp?"":" no"}" title="${esc(a.l+" · "+(a.resp||"sin responsable"))}">${esc(a.ab)}</span>`).join(""):`<span class="shc m">Sin áreas</span>`}</div>`;}
+    case "arearesp":{const ak=c.key.slice(5);const on=areaOn(p,ak);
+      return `<input class="in${on?"":" offarea"}" data-k="${k}" value="${esc(areaResp(p,ak))}" placeholder="${on?"Responsable":"inactiva"}" style="width:140px" list="dl-people" aria-label="${esc(c.label)}">`;}
+    case "cierre":{const c2=cierre(p);return `<span class="shc num${c2.done===c2.total?" okv":""}">${c2.done}/${c2.total}</span>`;}
     case "nextent":return nextEntHTML(p);
     case "hoja":{const h=shOf(p);return `<div class="hoja"><input class="in" data-k="${k}" value="${esc(v??"")}" placeholder="KAC-26…" style="width:118px" list="dl-hoja" aria-label="ID hoja maestra"><small class="${p.idHoja&&SH.loaded&&!h?"bad":""}">${h?esc(h.cliente+" · "+h.proyecto):p.idHoja?(SH.loaded?"No encontrado":"…"):"Sin enlazar"}</small></div>`;}
     default:return `<input class="in" data-k="${k}" value="${esc(v??"")}" placeholder="—" style="width:${c.w||150}px"${c.list?` list="dl-${k}"`:""} aria-label="${esc(c.label)}">`;
@@ -684,8 +751,9 @@ function cellHTML0(c,p){
 }
 function utilHTML(p){const u=util(p);if(!u)return `<span style="color:var(--muted)">—</span>`;return `${money(u.u)}<small>${Math.round(u.mg)}%</small>`;}
 function utilClass(p){const u=util(p);return "util"+(u?(u.u>=0?" pos":" neg"):"");}
-function ringHTML(p){const pr=progress(p);const col=pr.pct===100?"var(--ok)":"var(--accent)";return `<span class="ring" style="--p:${pr.pct};--rc:${col}" title="${pr.done} de 8 pasos operativos"><b>${pr.done}/8</b></span>`;}
-function metaHTML(p){const al=alertsOf(p);const top=al[0];return `<span>${esc(p.marca||"Sin marca")}</span><span>${esc(rangeLabel(p))}</span>${top?`<span class="tag s${top.s}" title="${esc(al.map(a=>a.t).join(" · "))}">${esc(top.t)}${al.length>1?` +${al.length-1}`:""}</span>`:""}`;}
+function ringHTML(p){const pr=progress(p),ci=cierre(p);const col=pr.pct===100?"var(--ok)":"var(--accent)";
+  return `<span class="ring" style="--p:${pr.pct};--rc:${col}" title="Operativo ${pr.done}/8 · Cierre ${ci.done}/${ci.total}"><b>${pr.done}/8</b></span>`;}
+function metaHTML(p){const al=alertsOf(p);const top=al[0];const ci=cierre(p);return `<span>${esc(p.marca||"Sin marca")}</span><span>${esc(rangeLabel(p))}</span><span class="tag ${ci.done===ci.total?"s1":""}" style="${ci.done===ci.total?"background:var(--ok-bg);color:var(--ok)":"background:var(--surface-2);color:var(--muted)"}">cierre ${ci.done}/${ci.total}</span>${top?`<span class="tag s${top.s}" title="${esc(al.map(a=>a.t).join(" · "))}">${esc(top.t)}${al.length>1?` +${al.length-1}`:""}</span>`:""}`;}
 
 function renderTable(){
   const wrap=$("#gridwrap");
@@ -744,7 +812,7 @@ function renderEq(){
   const list=filtered().filter(p=>!isPast(p));
   const map=new Map();
   for(const p of list)for(const t of teamOf(p)){if(!map.has(t.n))map.set(t.n,new Map());const m=map.get(t.n);if(!m.has(p.id))m.set(p.id,{p,roles:[]});m.get(p.id).roles.push(t.ab);}
-  const miss=ROLES.map(([rk,lab])=>[lab,list.filter(p=>!people(p[rk]).length).length]);
+  const miss=AREAS.map(([k,lab])=>[lab,list.filter(p=>areaOn(p,k)&&!people(areaResp(p,k)).length).length]).filter(x=>x[1]);
   const rows=[...map.entries()].map(([n,m])=>{const items=sorted([...m.values()].map(x=>x.p)).map(p=>({p,roles:m.get(p.id).roles}));
     const n14=items.filter(x=>{const d=daysTo(x.p.fechaInicio);return d!==null&&d<=14;}).length;
     const al=items.filter(x=>alertsOf(x.p).some(a=>a.s>=2)).length;
@@ -753,10 +821,10 @@ function renderEq(){
     const clash=new Set();for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++){const a=items[i].p,b=items[j].p;if(a.fechaInicio&&b.fechaInicio&&a.fechaInicio<=endOf(b)&&b.fechaInicio<=endOf(a)){clash.add(a.id);clash.add(b.id);}}
     return {n,items,n14,al,avg,rc,clash};}).sort((a,b)=>b.items.length-a.items.length||b.n14-a.n14);
   const max=Math.max(1,...rows.map(r=>r.items.length));
-  const head=`<div class="eqsum">${miss.map(([l,c])=>`<span class="tag ${c?"s2":"s1"}">Sin ${l.toLowerCase()}: ${c}</span>`).join("")}<span class="tag s1">${rows.length} personas con proyectos activos</span></div>`;
+  const head=`<div class="eqsum">${miss.map(([l,c])=>`<span class="tag s2">${l} sin responsable: ${c}</span>`).join("")}<span class="tag s1">${rows.length} personas con proyectos activos</span></div>`;
   if(!rows.length){$("#eq").innerHTML=head+`<div class="state">Todavía no hay responsables asignados. Escríbelos en las columnas 1 · Operativo, 2 · Creativo, 3 · Diseño y 4 · Administrativo de la pestaña Seguimiento.</div>`;return;}
   $("#eq").innerHTML=head+`<div class="eqgrid">`+rows.map(r=>{const pct=Math.round(r.items.length/max*100);const col=r.n14>=4||r.clash.size>=4?"var(--bad)":r.n14>=2?"var(--warn)":"var(--ok)";
-    return `<div class="pcard"><div class="hd"><div><b>${esc(r.n)}</b><div class="roles" style="margin-top:6px">${ROLES.map(([,lab,ab])=>`<span class="role${r.rc[ab]?"":" z"}">${lab} ${r.rc[ab]||0}</span>`).join("")}</div></div><button class="btn sm" data-fresp="${esc(r.n)}">Ver en tabla</button></div>
+    return `<div class="pcard"><div class="hd"><div><b>${esc(r.n)}</b><div class="roles" style="margin-top:6px">${[...AREAS,["respAdm","Administrativo","AD"]].filter(a=>r.rc[a[2]]).map(a=>`<span class="role">${a[1]} ${r.rc[a[2]]}</span>`).join("")}</div></div><button class="btn sm" data-fresp="${esc(r.n)}">Ver en tabla</button></div>
     <div class="lbar" title="Carga relativa al más cargado del equipo"><b style="width:${pct}%;background:${col}"></b></div>
     <div class="load"><div><span>Activos</span><b>${r.items.length}</b></div><div><span>≤14 días</span><b>${r.n14}</b></div><div><span>Con alertas</span><b>${r.al}</b></div><div><span>Avance</span><b>${r.avg}%</b></div></div>
     <ul>${r.items.map(x=>`<li><span class="dt">${esc(rangeLabel(x.p))}</span><span>${esc(x.p.proyecto||"")} <span class="rl">· ${x.roles.join("+")}</span></span>${r.clash.has(x.p.id)?`<span class="tag s2">Simultáneo</span>`:"<span></span>"}</li>`).join("")}</ul></div>`;}).join("")+`</div>`;
@@ -796,7 +864,7 @@ function renderInd(){
   const BS=[["venue","Venue"],["concepto","Concepto"],["distribucion","Distribución"],["lookfeel","Look & Feel"],["pptoEjecEstado","PPTO ejecución"]];
   const nA=act.length;
   const bs=BS.map(([k,l])=>{const c={ok:0,warn:0,idle:0};for(const p of act){const v=p[k];c[v==="Listo"||v==="N/A"?"ok":v==="En proceso"?"warn":"idle"]++;}return {l,...c};});
-  const extra=[["Equipo completo",act.filter(p=>ROLES.every(([rk])=>people(p[rk]).length)).length],["Proveedor técnico",act.filter(p=>(p.provTecnico||"").trim()).length],["Proveedor impresión",act.filter(p=>(p.provImpresion||"").trim()).length]].map(([l,v])=>({l,ok:v,warn:0,idle:nA-v}));
+  const extra=[["Áreas con responsable",act.filter(teamReady).length],["Proveedor técnico",act.filter(p=>(p.provTecnico||"").trim()).length],["Proveedor impresión",act.filter(p=>(p.provImpresion||"").trim()).length]].map(([l,v])=>({l,ok:v,warn:0,idle:nA-v}));
   const allS=[...bs,...extra];const worst=[...allS].sort((a,b)=>a.ok-b.ok)[0];
   const seg=(v,t)=>v?`<b class="sg" style="flex:${v};background:var(--${t})" title="${v}"></b>`:"";
   h+=panel("Cuello de botella operativo",`${nA} proyectos activos`,nA?`${worst&&worst.ok<nA?`<div class="flag s1">Paso más atrasado: <b>${worst.l}</b> — ${worst.ok} de ${nA} listos.</div>`:""}<div class="stk">${allS.map(x=>`<div class="fr"><span class="fl">${x.l}</span><span class="sb">${seg(x.ok,"ok")}${seg(x.warn,"warn")}${seg(x.idle,"line")}</span><span class="fv"><small>${x.ok}/${nA}</small></span></div>`).join("")}</div>
@@ -884,7 +952,7 @@ function drawerField(label,key,type,opts){const c={key,label,type,opts,w:220};re
 function renderDrawer(){
   const p=S.projects.get(D.id);const el=$("#drawer");
   if(!p){el.innerHTML=`<div class="state">Este proyecto ya no existe.</div>`;return;}
-  const pr=progress(p),al=alertsOf(p),h=shOf(p);
+  const pr=progress(p),al=alertsOf(p),h=shOf(p),F=fin(p),CI=cierre(p);
   const E=ents(p).slice().sort((a,b)=>(a.ok-b.ok)||(a.f||"9").localeCompare(b.f||"9"));
   const bit=(Array.isArray(p.bitacora)?p.bitacora:[]).slice().sort((a,b)=>b.d.localeCompare(a.d));
   const ro=S.ro?" disabled":"";
@@ -916,8 +984,25 @@ function renderDrawer(){
       <form class="entf" id="entForm"><input class="in" id="entT" list="dl-ent" placeholder="Entregable (ej. Render / Look & Feel)" required${ro}><input class="in in-date" id="entF" type="date"${ro}><input class="in" id="entR" list="dl-people" placeholder="Responsable"${ro}><button class="btn pri sm" type="submit"${ro}>Agregar</button></form>
       <datalist id="dl-ent">${ENT_SUG.map(s=>`<option value="${esc(s)}">`).join("")}</datalist>
     </section>
-    <section><h3>Equipo</h3><div class="dg">${ROLES.map(([k,l])=>drawerField(l,k,"people")).join("")}</div></section>
+    <section><h3>Áreas de servicio y responsables</h3><p class="note">Activa las áreas que participan en el proyecto y asigna quién responde por cada una.</p><div class="areas-grid">${AREAS.map(([k,l])=>`<label class="ar ${areaOn(p,k)?"on":""}"><input type="checkbox" data-area="${k}" ${areaOn(p,k)?"checked":""}${ro}><span class="arl">${l}</span><input class="in arr" data-arearesp="${k}" list="dl-people" value="${esc(areaResp(p,k))}" placeholder="${areaOn(p,k)?"Responsable":"Inactiva"}"${ro}></label>`).join("")}</div>
+      <div class="dg" style="margin-top:8px">${drawerField("Responsable administrativo (cierre)","respAdm","people")}</div></section>
     <section><h3>Pasos operativos</h3><div class="dg">${[["venue","Venue"],["concepto","Concepto"],["distribucion","Distribución"],["lookfeel","Look & Feel y render"],["pptoEjecEstado","PPTO de ejecución"]].map(([k,l])=>drawerField(l,k,"step")).join("")}${drawerField("Prov. pantalla · sonido · luces · hierros","provTecnico","text")}${drawerField("Prov. impresión · corpóreos · MDF","provImpresion","text")}</div></section>
+    <section><h3>Números del proyecto</h3>
+      <div class="fintab">
+        <div><span>Ingreso aprobado (hoja)</span><b>${h?money(F.ing):"—"}</b></div>
+        <div><span>Pérdida por cambio a Bs (${Math.round(F.pct)}%)</span><b class="tbad">${F.ing?"-"+money(F.perd):"—"}</b></div>
+        <div><span>Ingreso neto</span><b>${F.ing?money(F.neto):"—"}</b></div>
+        <div><span>Costos (${p.costosReal!=null&&p.costosReal!==""?"reales":"estimados"})</span><b>${F.cost!==null?money(F.cost):"—"}</b></div>
+        <div><span>Utilidad real</span><b class="${F.util!==null?(F.util>=0?"tok":"tbad"):""}">${F.util!==null?money(F.util):"—"}</b></div>
+        <div><span>Margen sobre ingreso</span><b>${F.mg!==null?Math.round(F.mg)+"%":"—"}</b></div>
+      </div>
+      <div class="dg">${drawerField("% pérdida por cambio","perdidaPct","pct")}${drawerField("Costos estimados","costosEst","money")}${drawerField("Costos reales","costosReal","money")}</div>
+      <p class="note">Si dejas el % vacío se usa el general (${Math.round(S.cfg.perdidaPct)}%). Los costos reales mandan sobre los estimados.</p>
+    </section>
+    <section><h3>Cierre administrativo y comercial <small>${CI.done}/${CI.total}</small></h3>
+      <ul class="ents">${cierreSteps(p).map(x=>`<li class="${x.ok?"ok":""}"><span class="ck ${x.ok?"on":""}">${x.ok?"✓":""}</span><span class="et">${esc(x.l)}<small>${x.auto?"automático · hoja maestra o fecha del evento":"se marca aquí"}</small></span></li>`).join("")}</ul>
+      <div class="dg">${drawerField("ODC recibida","odc","yn")}${drawerField("Cierre administrativo","cierreAdm","yn")}</div>
+    </section>
     <section><h3>Bitácora</h3>
       <form class="bitf" id="bitForm"><textarea class="in ta" id="bitT" rows="2" placeholder="Acuerdos de la reunión, cambios, pendientes…" required${ro}></textarea><button class="btn pri sm" type="submit"${ro}>Guardar nota</button></form>
       <ul class="bit">${bit.length?bit.map(b=>`<li><small>${esc(new Date(b.d).toLocaleDateString("es-VE",{day:"2-digit",month:"short",year:"numeric"}))}</small><p>${esc(b.t)}</p></li>`).join(""):`<li class="empty">Aún no hay notas.</li>`}</ul>
@@ -938,6 +1023,8 @@ function initDrawer(){
   const dr=$("#drawer");
   dr.addEventListener("change",e=>{const el=e.target;
     if(el.dataset.ent){setEntOk(D.id,el.dataset.ent,el.checked);renderAll();renderDrawer();return;}
+    if(el.dataset.area){save(D.id,"area."+el.dataset.area,{on:el.checked,resp:areaResp(S.projects.get(D.id),el.dataset.area)});renderAll();renderDrawer();return;}
+    if(el.dataset.arearesp){const ak=el.dataset.arearesp;const v=el.value.trim();save(D.id,"area."+ak,{on:v?true:areaOn(S.projects.get(D.id),ak),resp:v});renderAll();D.pending=true;return;}
     drChange(el);});
   dr.addEventListener("focusout",()=>setTimeout(()=>{if(D.pending&&!inDrawer()&&D.id){renderDrawer();renderAll();}},0));
   dr.addEventListener("click",e=>{
@@ -953,7 +1040,7 @@ function initDrawer(){
     if(e.target.id==="newForm"){const g=k=>{const x=$("#nf_"+k);return x?x.value.trim():"";};
       const name=g("proyecto");if(!name){$("#nf_proyecto").focus();return;}
       const vals={proyecto:name,marca:g("marca"),evento:g("evento"),servicio:g("servicio"),idHoja:g("idHoja").toUpperCase(),fase:g("fase")||"Planificación",
-        fechaInicio:g("fechaInicio")||null,fechaFin:g("fechaFin")||null,proxReunion:g("proxReunion")||null,respOp:g("respOp"),createdAt:new Date().toISOString()};
+        fechaInicio:g("fechaInicio")||null,fechaFin:g("fechaFin")||null,proxReunion:g("proxReunion")||null,areas:Object.fromEntries(AREAS.filter(([k])=>{const c=$("#nfa_"+k);return c&&c.checked;}).map(([k])=>[k,{on:true,resp:""}])),createdAt:new Date().toISOString()};
       const id=createProject(vals);if(id){toast(`“${name}” creado`);openDrawer(id);}return;}
     const p=S.projects.get(D.id);if(!p)return;
     if(e.target.id==="entForm"){const t=$("#entT").value.trim();if(!t)return;
@@ -1037,6 +1124,13 @@ function renderPanel(){
   <div class="p-tiles">${tile("Vencidos",venc.length,"entregables y reuniones atrasados",venc.length?"tbad":"")}${tile("Hoy",hoy.length,"reuniones, entregables y eventos")}${tile("Esta semana",sem.length,"en agenda")}${tile("Sin próxima acción",noNext.length,"proyectos sin reunión ni entregable",noNext.length?"twarn":"")}${tile("Eventos 30 días",prox.length,"próximos a ejecutar")}${tile("Alertas críticas",crit.length,"requieren acción ya",crit.length?"tbad":"")}</div>
   <div class="p-grid">
     <div class="panel"><h2>Próximos eventos <small>30 días</small></h2>${prox.length?`<div class="p-list">${prox.map(p=>{const pr=progress(p);const ne=nextEnt(p);return `<button class="p-row" data-open="${esc(p.id)}"><span class="p-d">${esc(rangeLabel(p))}</span><span class="p-n"><b>${esc(p.proyecto||"")}</b><small>${esc(p.fase||"Sin fase")}${ne?" · próximo: "+esc(ne.t):""}</small></span><span class="p-pr"><span class="hb"><b style="width:${pr.pct}%;${pr.pct===100?"background:var(--ok)":""}"></b></span><small>${pr.done}/8</small></span></button>`;}).join("")}</div>`:`<div class="empty">Sin eventos en los próximos 30 días.</div>`}</div>
+    <div class="panel"><h2>Rentabilidad de los eventos <small>proyectos enlazados a la hoja</small></h2>${(()=>{
+      const L=list.filter(p=>shOf(p));const F=L.map(fin);
+      const ing=F.reduce((s,f)=>s+f.ing,0),perd=F.reduce((s,f)=>s+f.perd,0),neto=ing-perd;
+      const conC=L.filter(p=>fin(p).util!==null);const cost=conC.reduce((s,p)=>s+fin(p).cost,0),ut=conC.reduce((s,p)=>s+fin(p).util,0);
+      if(!L.length)return `<div class="empty">Enlaza los eventos con su ID de la hoja maestra para ver sus números.</div>`;
+      return `<div class="fintab"><div><span>Ingreso aprobado</span><b>${money(ing)}</b></div><div><span>Pérdida por cambio a Bs</span><b class="tbad">-${money(perd)}</b></div><div><span>Ingreso neto</span><b>${money(neto)}</b></div><div><span>Costos cargados</span><b>${conC.length?money(cost):"—"}</b></div><div><span>Utilidad real</span><b class="${ut>=0?"tok":"tbad"}">${conC.length?money(ut):"—"}</b></div><div><span>Margen</span><b>${conC.length&&ing?Math.round(ut/conC.reduce((s,p)=>s+fin(p).ing,0)*100)+"%":"—"}</b></div></div>
+      <p class="note">${conC.length} de ${L.length} proyectos con costos cargados. La pérdida se calcula con el % de cada proyecto (por defecto ${Math.round(S.cfg.perdidaPct)}%).</p>`;})()}</div>
     <div class="panel"><h2>Requiere acción ya <small>alertas críticas</small></h2>${crit.length?`<div class="list">${crit.slice(0,10).map(({p,a})=>`<button class="li" data-open="${esc(p.id)}"><span class="sev s3"></span><span><div class="n">${esc(p.proyecto)}</div><div class="d">${esc(a.t)}</div></span><span class="when">${esc(rangeLabel(p))}</span></button>`).join("")}</div>`:`<div class="empty">Nada crítico.</div>`}
       ${noNext.length?`<h3 class="p-h3">Sin próxima acción</h3><div class="p-chips">${noNext.slice(0,12).map(p=>`<button class="p-chip" data-open="${esc(p.id)}">${esc(p.proyecto)}</button>`).join("")}</div>`:""}</div>
   </div></section>`;
@@ -1067,6 +1161,13 @@ function enqueue(key,fn){
 function save(id,k,v){
   if(S.ro)return;
   const p=S.projects.get(id);if(!p)return;
+  if(k.startsWith("area.")){const ak=k.slice(5);const cur=areaObj(p)[ak]||{};
+    const on=typeof v==="object"?!!v.on:(areaOn(p,ak)||!!String(v||"").trim());
+    const resp=typeof v==="object"?(v.resp!==undefined?v.resp:areaResp(p,ak)):v;
+    const entry={on,resp};
+    S.projects.set(id,{...p,areas:{...areaObj(p),[ak]:entry}});
+    if(S.db)enqueue("p/"+id,()=>S.db.doc("projects/"+id).update({areas:{[ak]:entry},updatedAt:new Date().toISOString()}));
+    return;}
   let next,patch;
   if(k.startsWith("custom.")){const cid=k.slice(7);next={...p,custom:{...(p.custom||{}),[cid]:v}};patch={custom:{[cid]:v}};}
   else{next={...p,[k]:v};patch={[k]:v};}
@@ -1120,7 +1221,7 @@ function setView(v){S.view=v;$("#tabAgenda").setAttribute("aria-pressed",v==="ag
 $("#tabAgenda").onclick=()=>setView("agenda");$("#tabTabla").onclick=()=>setView("tabla");$("#tabInd").onclick=()=>setView("ind");$("#tabEq").onclick=()=>setView("eq");$("#tabProv").onclick=()=>setView("prov");
 $("#grpToggle").querySelectorAll("button").forEach(b=>{b.setAttribute("aria-pressed",!S.hidden[b.dataset.g]);b.onclick=()=>{S.hidden[b.dataset.g]=!S.hidden[b.dataset.g];b.setAttribute("aria-pressed",!S.hidden[b.dataset.g]);try{localStorage.setItem("kc-hidden",JSON.stringify(S.hidden));}catch(e){}renderTable();};});
 
-function newDoc(){return {proyecto:"",evento:"",marca:S.f.marca!=="all"?S.f.marca:"",servicio:"",idHoja:"",fase:"Planificación",estatusActual:"",estatusFecha:null,entregables:[],bitacora:[],temaReunion:"",fechaMontaje:null,fechaInicio:null,fechaFin:null,respOp:"",respCre:"",respDis:"",respAdm:"",venue:"Pendiente",concepto:"Pendiente",distribucion:"Pendiente",lookfeel:"Pendiente",pptoEjecEstado:"Pendiente",provTecnico:"",provImpresion:"",ultReunion:null,proxReunion:null,pptoCliente:"Por enviar",odc:"No",factura:"No",montoFactura:null,costosEst:null,notas:"",custom:{},createdAt:new Date().toISOString()};}
+function newDoc(){return {proyecto:"",evento:"",marca:S.f.marca!=="all"?S.f.marca:"",servicio:"",idHoja:"",areas:{},perdidaPct:null,costosReal:null,cierreAdm:"No",fase:"Planificación",estatusActual:"",estatusFecha:null,entregables:[],bitacora:[],temaReunion:"",fechaMontaje:null,fechaInicio:null,fechaFin:null,respOp:"",respCre:"",respDis:"",respAdm:"",venue:"Pendiente",concepto:"Pendiente",distribucion:"Pendiente",lookfeel:"Pendiente",pptoEjecEstado:"Pendiente",provTecnico:"",provImpresion:"",ultReunion:null,proxReunion:null,pptoCliente:"Por enviar",odc:"No",factura:"No",montoFactura:null,costosEst:null,notas:"",custom:{},createdAt:new Date().toISOString()};}
 function createProject(vals){
   if(S.ro)return null;
   const id="p"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -1146,9 +1247,9 @@ function openNew(){
       <label class="df"><span>Evento hasta</span><input class="in in-date" type="date" id="nf_fechaFin"></label>
       <label class="df"><span>Próxima reunión</span><input class="in in-date" type="date" id="nf_proxReunion"></label>
     </div></section>
-    <section><h3>Responsable</h3><div class="dg">
-      <label class="df"><span>Operativo</span><input class="in" id="nf_respOp" list="dl-people" placeholder="Nombre"></label>
-    </div></section>
+    <section><h3>Áreas de servicio</h3><p class="note">Marca las que participan; los responsables se asignan luego en la ficha.</p>
+      <div class="areas-grid">${AREAS.map(([k,l])=>`<label class="ar"><input type="checkbox" id="nfa_${k}"><span class="arl">${l}</span></label>`).join("")}</div>
+    </section>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" type="submit">Crear y abrir ficha</button><button class="btn" type="button" id="nfCancel">Cancelar</button></div>
   </form>`;
   $("#drawer").hidden=false;$("#drawerOv").hidden=false;document.body.classList.add("dopen");
@@ -1156,6 +1257,8 @@ function openNew(){
 }
 $("#btnAdd").onclick=openNew;
 
+$("#cfgPerd").addEventListener("change",e=>{const v=num(e.target.value);const pct=v===null?15:Math.max(0,Math.min(100,v));S.cfg={...S.cfg,perdidaPct:pct};e.target.value=pct;
+  if(S.db)enqueue("cfg",()=>S.db.doc("config/settings").set({perdidaPct:pct}));renderAll();});
 $("#shBtn").onclick=()=>{SH.err=null;SH.loaded=false;renderShStatus();loadSheet();};
 $("#btnCsv").onclick=()=>{
   const cols=[...COLS.filter(c=>c.type!=="calc"),...S.custom.map(c=>({key:"custom."+c.id,label:c.label}))];
@@ -1198,6 +1301,7 @@ let ren=0;function schedule(){cancelAnimationFrame(ren);ren=requestAnimationFram
     S.server=new Map(snap.docs.map(d=>[d.id,{id:d.id,...d.data()}]));
     S.projects=m;S.loaded=true;updSync();schedule();
   },err=>{setSync("error","Sin sincronizar");toast("Se perdió la conexión en vivo. Recarga la página.");});
+  db.doc("config/settings").onSnapshot(s2=>{const d=s2.exists?(s2.data()||{}):{};S.cfg={perdidaPct:num(d.perdidaPct)!==null?num(d.perdidaPct):15};const i=$("#cfgPerd");if(i&&i!==document.activeElement)i.value=S.cfg.perdidaPct;schedule();},()=>{});
   db.doc("config/columns").onSnapshot(s=>{S.custom=s.exists?((s.data()||{}).list||[]):[];schedule();},()=>{});
 })();
 })();
